@@ -23,7 +23,8 @@ class TraQuadRoughPPORunnerCfg(RslRlOnPolicyRunnerCfg):
         rnn_type="lstm",
         rnn_hidden_dim=256,
         rnn_num_layers=1,
-        distribution_cfg=RslRlRNNModelCfg.GaussianDistributionCfg(init_std=1.0, std_type="log"),
+        # one unit of wheel action is 1.3 m/s of track speed: a lower initial noise avoids violent exploration
+        distribution_cfg=RslRlRNNModelCfg.GaussianDistributionCfg(init_std=0.5, std_type="log"),
     )
     critic = RslRlRNNModelCfg(
         hidden_dims=[256, 128, 64],
@@ -56,4 +57,3 @@ class TraQuadFlatPPORunnerCfg(TraQuadRoughPPORunnerCfg):
 
         self.max_iterations = 5000
         self.experiment_name = "traquad_flat"
-        self.actor.distribution_cfg.init_std = 2.0

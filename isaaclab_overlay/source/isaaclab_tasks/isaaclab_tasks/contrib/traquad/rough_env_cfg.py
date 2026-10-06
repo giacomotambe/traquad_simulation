@@ -33,8 +33,9 @@ from isaaclab_assets.robots.traquad import TRAQUAD_CFG  # isort: skip
 # the links of the TraQuad USD are nested under Robot/Geometry
 BASE_PRIM_PATH = "{ENV_REGEX_NS}/Robot/Geometry/base_link"
 
-# track velocity action scale [rad/s of the wheels per unit of action]: 1 unit = 1 m/s of track speed (r = 15 mm)
-WHEEL_VEL_SCALE = 1.0 / 0.015
+# track velocity action scale [rad/s of the wheels per unit of action]: 1 unit = 1.3 m/s of track speed (r = 15 mm).
+# With |v| <= 1 m/s and |w| <= 1 rad/s a track needs up to v + w * B / 2 = 1.2 m/s, plus the skid-steering slip
+WHEEL_VEL_SCALE = 1.3 / 0.015
 
 
 ##
@@ -67,8 +68,7 @@ class CommandsCfg:
         heading_command=False,
         debug_vis=True,
         # skid steering: no lateral velocity
-        # forward speed limited to 0.5 m/s for the first trainings
-        ranges=mdp.UniformVelocityCommandCfg.Ranges(lin_vel_x=(-0.5, 0.5), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0)),
+        ranges=mdp.UniformVelocityCommandCfg.Ranges(lin_vel_x=(-1.0, 1.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0)),
     )
 
 
@@ -236,6 +236,12 @@ class RewardsCfg:
     dof_torques_l2 = RewTerm(
         func=mdp.joint_torques_l2, weight=-1.0e-3, params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*HFE"])}
     )
+    # mechanical power of the legs: holding a pose is free, moving the legs costs. The robot drives like a
+    # differential-drive robot on easy ground and moves the legs only when that pays off (steps, rough terrain).
+    # Kept light at the start so the policy still explores leg motions; raise it later for more energy saving
+    hfe_power_l1 = RewTerm(
+        func=mdp.joint_power_l1, weight=-0.005, params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*HFE"])}
+    )
     dof_acc_l2 = RewTerm(
         func=mdp.joint_acc_l2, weight=-2.5e-7, params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*HFE"])}
     )
@@ -250,15 +256,11 @@ class RewardsCfg:
         weight=-5.0,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=["body_.*_ankle"])},
     )
-    # disabled: measured on single rollers, which touch and leave the ground every few ms while the wheel turns, so
-    # it rewards negatively and also during rotation in place (planar speed ~0). To be rewritten per wheel/track.
-    feet_air_time_stuck = RewTerm(
-        func=mdp.feet_air_time_stuck_recovery,
-        weight=0.0,
-        params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names="wheel_2_.*_roller_.*"),
-            "threshold": 0.05,
-        },
+    # stuck (forward speed commanded, base not moving): reward lifting a whole track, e.g. onto a step
+    track_air_time_stuck = RewTerm(
+        func=mdp.track_air_time_stuck_recovery,
+        weight=0.25,
+        params={"sensor_name": "contact_forces", "threshold": 0.05},
     )
     # -- the two middle wheels (wheel 2) of the front and hind track of a side should turn together
     wheel_disagreement_L = RewTerm(
@@ -279,10 +281,10 @@ class RewardsCfg:
             )
         },
     )
-    # [rad/s]: weight scaled with the wheel action scale (10 -> 66.7 rad/s per unit), as -0.005 was with 10
+    # [rad/s]: weight scaled with the wheel action scale (10 -> 86.7 rad/s per unit), as -0.005 was with 10
     wheel_vel_difference_L = RewTerm(
         func=mdp.joint_vel_difference,
-        weight=-7.5e-4,
+        weight=-5.8e-4,
         params={
             "asset_cfg": SceneEntityCfg(
                 "robot", joint_names=["joint_wheel_2_LEFT_F", "joint_wheel_2_LEFT_H"], preserve_order=True
@@ -291,7 +293,7 @@ class RewardsCfg:
     )
     wheel_vel_difference_R = RewTerm(
         func=mdp.joint_vel_difference,
-        weight=-7.5e-4,
+        weight=-5.8e-4,
         params={
             "asset_cfg": SceneEntityCfg(
                 "robot", joint_names=["joint_wheel_2_RIGHT_F", "joint_wheel_2_RIGHT_H"], preserve_order=True

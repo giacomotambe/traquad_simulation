@@ -45,7 +45,8 @@ The TraQuad code for Isaac Lab lives in `../isaaclab_overlay/` (versioned in thi
   (found through the layout `traquad_simulation/isaaclab_traquad/...`, or the `TRAQUAD_USD` variable)
 - `source/isaaclab_tasks/isaaclab_tasks/contrib/traquad/`: tasks `Isaac-Velocity-Flat-TraQuad` and
   `Isaac-Velocity-Rough-TraQuad` (PhysX backend), with their MDP terms (one velocity action per track, wheel rewards,
-  roller dry friction randomized in 0.02-0.06 N m) and RSL-RL agents (rough: 15000 iterations, flat: 5000)
+  roller dry friction randomized in 0.02-0.06 N m; commands v and w in [-1, 1], 1 unit of track action = 1.3 m/s;
+  leg power penalty and per-track stuck recovery reward) and RSL-RL agents (rough: 15000 iterations, flat: 5000)
 
 On this machine `../isaaclab_traquad` also keeps `logs/`, `outputs/`, `isaac_model/` (runs of the Isaac Lab 2.x fork)
 and `_archive/isaaclab_traquad_2x_fork.tar.gz` (its sources: old TraQuad and OmniQuad tasks).
