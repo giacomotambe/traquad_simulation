@@ -1,0 +1,166 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.3.2"
+    }
+    defaultPrim = "traquad"
+    endTimeCode = 1000000
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    startTimeCode = 0
+    subLayers = [
+        @./physics.usda@
+    ]
+    upAxis = "Z"
+)
+
+over "traquad"
+{
+    over "Physics"
+    {
+        over "body_left_H_ankle" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_LEFT_H" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_LEFT_H" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_LEFT_H" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_LEFT_H" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "body_left_F_ankle" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_LEFT_F" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_LEFT_F" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_LEFT_F" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_LEFT_F" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "body_right_F_ankle" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_RIGHT_F" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_RIGHT_F" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_RIGHT_F" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_RIGHT_F" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "body_right_H_ankle" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_RIGHT_H" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_RIGHT_H" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_RIGHT_H" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_RIGHT_H" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "LH_HFE" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "LF_HFE" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "RF_HFE" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+
+        over "RH_HFE" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+        }
+    }
+}
+

@@ -1,0 +1,28 @@
+# Copyright (c) 2022-2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+from isaaclab.utils import configclass
+
+from .rough_env_cfg import TraQuadRoughEnvCfg
+
+
+@configclass
+class TraQuadFlatEnvCfg(TraQuadRoughEnvCfg):
+    """Velocity tracking of the TraQuad robot on flat ground."""
+
+    def __post_init__(self):
+        super().__post_init__()
+
+        # scene
+        self.scene.terrain.terrain_type = "plane"
+        self.scene.terrain.terrain_generator = None
+        self.scene.height_scanner = None
+        # observations
+        self.observations.critic.height_scan = None
+        # rewards
+        self.rewards.flat_orientation_l2.weight = -5.0
+        self.rewards.dof_torques_l2.weight = -2.5e-5
+        # curriculum
+        self.curriculum.terrain_levels = None

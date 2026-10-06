@@ -11,8 +11,8 @@ import math
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--usd', required=True)
-parser.add_argument('--roller_friction', type=float, default=0.0,
-                    help='dry (Coulomb) friction torque of the roller joints [Nm]')
+parser.add_argument('--roller_friction', type=float, default=0.06,
+                    help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.06 = asset value)')
 parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--forces', type=float, nargs='+', default=[2.0, 5.0, 10.0, 20.0, 40.0])
 parser.add_argument('--push', type=float, default=3.0, help='push duration [s]')
@@ -83,8 +83,8 @@ ankles = [i for n, i in idx.items() if n.endswith('_ankle')]
 wheels = [i for n, i in idx.items() if n.startswith('joint_wheel_')]
 rollers = [i for n, i in idx.items() if '_roller_' in n]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-kp[hfe] = 100.0; kd[hfe] = 0.4; fmax[hfe] = 5.0
-kp[ankles] = 20.0; kd[ankles] = 0.2; fmax[ankles] = 10.0
+kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 5.0
+kd[ankles] = 0.05   # passive ankles, as in Gazebo and in the asset
 kd[wheels] = 0.5; fmax[wheels] = 10.0          # wheels held at zero speed (velocity drive)
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
@@ -97,7 +97,7 @@ for n, v in STANCE.items():
 robot.set_dof_positions(q0[None])
 robot.set_dof_position_targets(q0[None])
 robot.set_dof_velocity_targets(np.zeros((1, N), np.float32))
-if rollers and args.roller_friction > 0:   # dry friction: a roller turns only above this torque
+if rollers:   # dry friction: a roller turns only above this torque
     tau = np.full((1, len(rollers)), args.roller_friction, np.float32)
     robot.set_dof_friction_properties(static_frictions=tau, dynamic_frictions=tau, dof_indices=rollers)
 

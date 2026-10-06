@@ -32,3 +32,22 @@ nano.save
 
 # Isaac Sim test outputs
 isaac_sim/results/
+
+# Isaac Lab 3.0 checkout (own git repo): created by isaaclab_overlay/setup_isaaclab.sh
+isaaclab_traquad/
+
+# Training outputs (Isaac Lab / RSL-RL): runs, checkpoints, TensorBoard, videos
+logs/
+outputs/
+runs/
+wandb/
+*.pt
+*.pth
+*.ckpt
+events.out.tfevents.*
+*.mp4
+*.avi
+
+# Isaac Sim test outputs: rendered frames and logged trajectories
+isaac_sim/frames/
+isaac_sim/*.csv

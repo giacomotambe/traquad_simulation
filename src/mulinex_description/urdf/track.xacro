@@ -2,6 +2,12 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="track">
 
   <!-- ===================== ARGOMENTI COMUNI ===================== -->
+  <!-- track_model: "rollers" (default) = ground wheels with 8 passive rollers each;
+       "cylinder" = all wheels are plain primitive cylinders, wheels 1, 3, 4 follow wheel 2 through mimic joints
+       (one driven wheel per track, as the real belt). In both models the track body collides as a box -->
+  <xacro:arg name="track_model" default="rollers"/>
+  <xacro:property name="cylinder_tracks" value="${'$(arg track_model)' == 'cylinder'}"/>
+
   <!-- whole track (body + 4 wheels + rollers) = 1.0 kg x track_mass_scale = 0.325 kg (real robot);
        masses and inertias of body, wheels and rollers are scaled by the same factor -->
   <xacro:property name="track_mass_scale" default="0.325"/>
@@ -11,9 +17,10 @@
   <xacro:property name="wheel_izz" default="${1.15625e-05 * track_mass_scale}"/>
   <xacro:property name="wheel_mesh" default="file://$(find mulinex_description)/meshes//wheel.stl"/>
 
-  <!-- Wheel/roller contact. Isotropic friction (Isaac Sim default 0.5), lateral compliance
-       comes from passive rollers on the ground wheels: roller_damping tunes lateral resistance -->
-  <xacro:property name="wheel_mu" value="0.5"/>
+  <!-- Wheel/roller contact. Isotropic friction 0.75, the effective wheel-ground value of Isaac Sim
+       (open_traquad.py: ground 1.0 averaged with the robot default 0.5; the Gazebo ground keeps the SDF default 1.0,
+       the contact takes the minimum). Lateral compliance comes from passive rollers on the ground wheels -->
+  <xacro:property name="wheel_mu" value="0.75"/>
   <xacro:property name="roller_n" value="8"/>
   <xacro:property name="roller_radius" value="0.008"/>
   <xacro:property name="roller_ring_radius" value="0.007"/>
@@ -89,7 +96,7 @@
   </xacro:macro>
 
   <!-- Macro RUOTA: rollers=true for ground wheels, false for the raised idler -->
-  <xacro:macro name="wheel" params="name parent xyz rpy rollers:=true">
+  <xacro:macro name="wheel" params="name parent xyz rpy rollers:=true mimic:=''">
     <link name="${name}">
       <xacro:if value="${rollers}">
         <xacro:property name="hub_mass" value="${wheel_mass - roller_n*roller_mass}"/>
@@ -129,6 +136,9 @@
       <child link="${name}"/>
       <axis xyz="0 0 1"/>
       <limit effort="10" velocity="100000"/>
+      <xacro:if value="${mimic != ''}">
+        <mimic joint="${mimic}" multiplier="1" offset="0"/>
+      </xacro:if>
     </joint>
 
     <xacro:if value="${rollers}">
@@ -174,10 +184,12 @@
           <color rgba="0.13 0.13 0.14 1"/>
         </material>
       </visual>
+      <!-- bounding box of body_left.stl (no convex hull of the mesh on steps and obstacles);
+           12.5 mm above the ground when the track lies flat, as the mesh -->
       <collision>
-        <origin xyz="0 0 0" rpy="0 0 3.14159"/>
+        <origin xyz="0.025 -0.0119 -0.0174" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="${body_left_mesh}"/>
+          <box size="0.05 0.1417 0.0869"/>
         </geometry>
       </collision>
     </link>
@@ -218,10 +230,11 @@
           <color rgba="0.13 0.13 0.14 1"/>
         </material>
       </visual>
+      <!-- bounding box of body_right.stl -->
       <collision>
-        <origin xyz="0 0 0" rpy="-1.5708 0 -3.14159"/>
+        <origin xyz="-0.025 0.0174 -0.0119" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="${body_right_mesh}"/>
+          <box size="0.05 0.0869 0.1417"/>
         </geometry>
       </collision>
     </link>
@@ -232,33 +245,33 @@
   <!-- LEFT_H -->
   <xacro:body_left name="body_left_H" parent="LH_UPPER_LEG"
                    xyz="-0.19 0.05 0" rpy="1.5708 0 1.5708" ankle_center="${-ankle_flat}"/>
-  <xacro:wheel name="wheel_1_LEFT_H" parent="body_left_H" xyz="0 0.0484063 -0.0583795" rpy="-6.12323e-17 -1.5708 0"/>
-  <xacro:wheel name="wheel_2_LEFT_H" parent="body_left_H" xyz="0 1.07779e-16 -0.0583795" rpy="-6.12323e-17 -1.5708 0"/>
-  <xacro:wheel name="wheel_3_LEFT_H" parent="body_left_H" xyz="0 -0.0510313 -0.0583795" rpy="-6.12323e-17 -1.5708 0"/>
-  <xacro:wheel name="wheel_4_LEFT_H" parent="body_left_H" xyz="0 -0.0766777 -0.0417374" rpy="-6.12323e-17 -1.5708 0" rollers="false"/>
+  <xacro:wheel name="wheel_1_LEFT_H" parent="body_left_H" xyz="0 0.0484063 -0.0583795" rpy="-6.12323e-17 -1.5708 0" rollers="${not cylinder_tracks}" mimic="${'joint_wheel_2_LEFT_H' if cylinder_tracks else ''}"/>
+  <xacro:wheel name="wheel_2_LEFT_H" parent="body_left_H" xyz="0 1.07779e-16 -0.0583795" rpy="-6.12323e-17 -1.5708 0" rollers="${not cylinder_tracks}"/>
+  <xacro:wheel name="wheel_3_LEFT_H" parent="body_left_H" xyz="0 -0.0510313 -0.0583795" rpy="-6.12323e-17 -1.5708 0" rollers="${not cylinder_tracks}" mimic="${'joint_wheel_2_LEFT_H' if cylinder_tracks else ''}"/>
+  <xacro:wheel name="wheel_4_LEFT_H" parent="body_left_H" xyz="0 -0.0766777 -0.0417374" rpy="-6.12323e-17 -1.5708 0" rollers="false" mimic="${'joint_wheel_2_LEFT_H' if cylinder_tracks else ''}"/>
 
   <!-- LEFT_F -->
   <xacro:body_left name="body_left_F" parent="LF_UPPER_LEG"
                    xyz="0.19 0.05 0" rpy="-1.5708 0 1.5708" ankle_center="${ankle_flat}"/>
-  <xacro:wheel name="wheel_1_LEFT_F" parent="body_left_F" xyz="0 0.0484063 -0.0583795" rpy="-6.12323e-17 -1.5708 0"/>
-  <xacro:wheel name="wheel_2_LEFT_F" parent="body_left_F" xyz="0 1.07779e-16 -0.0583795" rpy="-6.12323e-17 -1.5708 0"/>
-  <xacro:wheel name="wheel_3_LEFT_F" parent="body_left_F" xyz="0 -0.0510313 -0.0583795" rpy="-6.12323e-17 -1.5708 0"/>
-  <xacro:wheel name="wheel_4_LEFT_F" parent="body_left_F" xyz="0 -0.0766777 -0.0417374" rpy="-6.12323e-17 -1.5708 0" rollers="false"/>
+  <xacro:wheel name="wheel_1_LEFT_F" parent="body_left_F" xyz="0 0.0484063 -0.0583795" rpy="-6.12323e-17 -1.5708 0" rollers="${not cylinder_tracks}" mimic="${'joint_wheel_2_LEFT_F' if cylinder_tracks else ''}"/>
+  <xacro:wheel name="wheel_2_LEFT_F" parent="body_left_F" xyz="0 1.07779e-16 -0.0583795" rpy="-6.12323e-17 -1.5708 0" rollers="${not cylinder_tracks}"/>
+  <xacro:wheel name="wheel_3_LEFT_F" parent="body_left_F" xyz="0 -0.0510313 -0.0583795" rpy="-6.12323e-17 -1.5708 0" rollers="${not cylinder_tracks}" mimic="${'joint_wheel_2_LEFT_F' if cylinder_tracks else ''}"/>
+  <xacro:wheel name="wheel_4_LEFT_F" parent="body_left_F" xyz="0 -0.0766777 -0.0417374" rpy="-6.12323e-17 -1.5708 0" rollers="false" mimic="${'joint_wheel_2_LEFT_F' if cylinder_tracks else ''}"/>
 
   <!-- RIGHT_F -->
   <xacro:body_right name="body_right_F" parent="RF_UPPER_LEG"
                     xyz="0.19 -0.05 0" rpy="3.14159 0 1.5708" ankle_center="${ankle_flat}"/>
-  <xacro:wheel name="wheel_1_RIGHT_F" parent="body_right_F" xyz="2.08167e-17 0.0583795 0.0484062" rpy="-1.5708 0 -1.5708"/>
-  <xacro:wheel name="wheel_2_RIGHT_F" parent="body_right_F" xyz="0 0.0583795 1.10544e-16" rpy="-1.5708 0 -1.5708"/>
-  <xacro:wheel name="wheel_3_RIGHT_F" parent="body_right_F" xyz="-2.08167e-17 0.0583795 -0.0510312" rpy="-1.5708 0 -1.5708"/>
-  <xacro:wheel name="wheel_4_RIGHT_F" parent="body_right_F" xyz="-3.46945e-17 0.0417374 -0.0766777" rpy="-1.5708 0 -1.5708" rollers="false"/>
+  <xacro:wheel name="wheel_1_RIGHT_F" parent="body_right_F" xyz="2.08167e-17 0.0583795 0.0484062" rpy="-1.5708 0 -1.5708" rollers="${not cylinder_tracks}" mimic="${'joint_wheel_2_RIGHT_F' if cylinder_tracks else ''}"/>
+  <xacro:wheel name="wheel_2_RIGHT_F" parent="body_right_F" xyz="0 0.0583795 1.10544e-16" rpy="-1.5708 0 -1.5708" rollers="${not cylinder_tracks}"/>
+  <xacro:wheel name="wheel_3_RIGHT_F" parent="body_right_F" xyz="-2.08167e-17 0.0583795 -0.0510312" rpy="-1.5708 0 -1.5708" rollers="${not cylinder_tracks}" mimic="${'joint_wheel_2_RIGHT_F' if cylinder_tracks else ''}"/>
+  <xacro:wheel name="wheel_4_RIGHT_F" parent="body_right_F" xyz="-3.46945e-17 0.0417374 -0.0766777" rpy="-1.5708 0 -1.5708" rollers="false" mimic="${'joint_wheel_2_RIGHT_F' if cylinder_tracks else ''}"/>
 
   <!-- RIGHT_H -->
   <xacro:body_right name="body_right_H" parent="RH_UPPER_LEG"
                     xyz="-0.19 -0.05 0" rpy="0 0 1.5708" ankle_center="${-ankle_flat}"/>
-  <xacro:wheel name="wheel_1_RIGHT_H" parent="body_right_H" xyz="2.08167e-17 0.0583795 0.0484062" rpy="-1.5708 0 -1.5708"/>
-  <xacro:wheel name="wheel_2_RIGHT_H" parent="body_right_H" xyz="0 0.0583795 1.10544e-16" rpy="-1.5708 0 -1.5708"/>
-  <xacro:wheel name="wheel_3_RIGHT_H" parent="body_right_H" xyz="-2.08167e-17 0.0583795 -0.0510312" rpy="-1.5708 0 -1.5708"/>
-  <xacro:wheel name="wheel_4_RIGHT_H" parent="body_right_H" xyz="-3.46945e-17 0.0417374 -0.0766777" rpy="-1.5708 0 -1.5708" rollers="false"/>
+  <xacro:wheel name="wheel_1_RIGHT_H" parent="body_right_H" xyz="2.08167e-17 0.0583795 0.0484062" rpy="-1.5708 0 -1.5708" rollers="${not cylinder_tracks}" mimic="${'joint_wheel_2_RIGHT_H' if cylinder_tracks else ''}"/>
+  <xacro:wheel name="wheel_2_RIGHT_H" parent="body_right_H" xyz="0 0.0583795 1.10544e-16" rpy="-1.5708 0 -1.5708" rollers="${not cylinder_tracks}"/>
+  <xacro:wheel name="wheel_3_RIGHT_H" parent="body_right_H" xyz="-2.08167e-17 0.0583795 -0.0510312" rpy="-1.5708 0 -1.5708" rollers="${not cylinder_tracks}" mimic="${'joint_wheel_2_RIGHT_H' if cylinder_tracks else ''}"/>
+  <xacro:wheel name="wheel_4_RIGHT_H" parent="body_right_H" xyz="-3.46945e-17 0.0417374 -0.0766777" rpy="-1.5708 0 -1.5708" rollers="false" mimic="${'joint_wheel_2_RIGHT_H' if cylinder_tracks else ''}"/>
 
 </robot>

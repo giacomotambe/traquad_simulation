@@ -8,18 +8,20 @@ into wheel angular velocities:
     v_right = v + w * B / 2
     omega_wheel = v_side / r
 
-Usage:
-    ./isaaclab.sh -p scripts/open_traquad.py --lin_vel 0.3 --ang_vel 0.0
-    ./isaaclab.sh -p scripts/open_traquad.py --demo
+Requires Isaac Lab 3.0 with Isaac Sim 6.1 (PhysX backend).
+
+Usage (conda env with Isaac Lab 3.0):
+    python open_traquad.py --lin_vel 0.3 --ang_vel 0.0 --viz kit
+    python open_traquad.py --demo --viz kit
 """
 
 import argparse
 import os
 
-from isaaclab.app import AppLauncher
+from isaaclab.app import add_launcher_args, launch_simulation
 
 # ---------------------------------------------------------------------
-# Launch Isaac Sim
+# Command line
 # ---------------------------------------------------------------------
 
 parser = argparse.ArgumentParser(description="TraQuad on flat ground with track velocity commands.")
@@ -27,41 +29,62 @@ parser.add_argument("--lin_vel", type=float, default=0.3, help="Forward velocity
 parser.add_argument("--ang_vel", type=float, default=0.0, help="Yaw rate command [rad/s].")
 parser.add_argument("--demo", action="store_true", help="Cycle through a sequence of (v, w) commands.")
 parser.add_argument(
+    "--model",
+    choices=["rollers", "cylinder"],
+    default="rollers",
+    help="Track model: wheels with passive rollers, or plain cylinder wheels coupled by mimic joints.",
+)
+parser.add_argument(
     "--rigid_legs", action="store_true", help="Hold HFE and ankle joints at the stance with very stiff drives."
 )
 parser.add_argument(
-    "--wheel_friction", type=float, default=None, help="Friction of the track wheels (default: keep the USD one)."
+    "--wheel_friction",
+    type=float,
+    default=0.0,
+    help="Static friction of the track wheels, min with the ground (default 0: robot default material 0.5, "
+    "averaged with the ground: 0.75 with --ground_friction 1.0).",
 )
 parser.add_argument(
     "--wheel_dynamic_friction",
     type=float,
-    default=None,
-    help="Dynamic (sliding) friction of the track wheels (default: same as --wheel_friction).",
+    default=0.45,
+    help="Dynamic (sliding) friction of the track wheels (min with the ground).",
 )
 parser.add_argument("--ground_friction", type=float, default=1.0, help="Friction of the ground plane.")
-AppLauncher.add_app_launcher_args(parser)
+parser.add_argument(
+    "--track_max_torque", type=float, default=40.0, help="Torque limit of a track motor [Nm at r = 15 mm]."
+)
+parser.add_argument(
+    "--ankle_stiffness", type=float, default=0.0, help="Ankle PD stiffness [Nm/rad] (0: passive ankles, as in Gazebo)."
+)
+add_launcher_args(parser)
 args_cli = parser.parse_args()
 
-app_launcher = AppLauncher(args_cli)
-simulation_app = app_launcher.app
-
-# ---------------------------------------------------------------------
-# Imports after app launch
-# ---------------------------------------------------------------------
-
 import torch
+from isaaclab_physx.sim.schemas import PhysxArticulationCfg, PhysxRigidBodyCfg
 
 import isaaclab.sim as sim_utils
 from isaaclab.actuators import ImplicitActuatorCfg
 from isaaclab.assets import Articulation, ArticulationCfg
 from isaaclab.utils.math import quat_apply_inverse
-from pxr import PhysxSchema, UsdPhysics
 
 
-# instanceable asset of this repository (rebuild with isaac_sim/make_isaac_asset.sh); TRAQUAD_USD overrides it
+# instanceable assets of this repository (rebuild with isaac_sim/make_isaac_asset.sh); TRAQUAD_USD overrides them
+ASSET_DIR = {"rollers": "traquad", "cylinder": "traquad_cylinder"}[args_cli.model]
 USD_PATH = os.environ.get(
-    "TRAQUAD_USD", os.path.join(os.path.dirname(os.path.abspath(__file__)), "isaac_sim", "assets", "traquad", "traquad.usda")
+    "TRAQUAD_USD",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "isaac_sim", "assets", ASSET_DIR, "traquad.usda"),
 )
+
+# Driven wheels and their velocity drive (damping = velocity gain). With the cylinder model only wheel 2 of each
+# track is driven, wheels 1, 3, 4 follow it through mimic joints. Track motor (same values as isaac_sim/finalize_usd.py):
+# torque limit --track_max_torque and velocity gain 2 Nm s/rad per track (at r = 15 mm), split over its driven wheels
+TRACK_MAX_TORQUE, TRACK_DAMPING = args_cli.track_max_torque, 2.0
+if args_cli.model == "cylinder":
+    WHEEL_JOINTS, DRIVEN_PER_TRACK = "joint_wheel_2_", 1
+else:
+    WHEEL_JOINTS, DRIVEN_PER_TRACK = "joint_wheel_.*_", 4
+WHEEL_MAX_TORQUE, WHEEL_DAMPING = TRACK_MAX_TORQUE / DRIVEN_PER_TRACK, TRACK_DAMPING / DRIVEN_PER_TRACK
 
 # Track geometry (from traquad.urdf)
 WHEEL_RADIUS = 0.015  # [m]
@@ -101,7 +124,7 @@ def make_robot_cfg(prim_path, position):
 
             activate_contact_sensors=True,
 
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(
+            rigid_props=PhysxRigidBodyCfg(
                 disable_gravity=False,
                 retain_accelerations=False,
                 linear_damping=0.0,
@@ -111,13 +134,13 @@ def make_robot_cfg(prim_path, position):
                 max_depenetration_velocity=1.0,
             ),
 
-            articulation_props=sim_utils.ArticulationRootPropertiesCfg(
+            articulation_props=PhysxArticulationCfg(
                 enabled_self_collisions=False,
                 solver_position_iteration_count=16,
                 solver_velocity_iteration_count=4,
-                # make sure the base is floating even if the USD was imported with a fixed base
-                fix_root_link=False,
             ),
+            # make sure the base is floating even if the USD was imported with a fixed base
+            fix_root_link=False,
         ),
 
         init_state=ArticulationCfg.InitialStateCfg(
@@ -148,8 +171,8 @@ def make_actuators_cfg():
         return {
             "legs_and_ankles": ImplicitActuatorCfg(
                 joint_names_expr=[".*HFE", "body_.*_ankle"],
-                effort_limit_sim=1000.0,
-                velocity_limit_sim=100.0,
+                joint_effort_limit=1000.0,
+                joint_velocity_limit=100.0,
                 stiffness=1.0e4,
                 damping=100.0,
             ),
@@ -159,17 +182,25 @@ def make_actuators_cfg():
     return {
         "legs": ImplicitActuatorCfg(
             joint_names_expr=[".*HFE"],
-            effort_limit_sim=5.0,
-            velocity_limit_sim=5.0,
+            joint_effort_limit=5.0,
+            joint_velocity_limit=5.0,
+            # same PD as Gazebo (pd_controller) and the Isaac Sim tests
             stiffness=100.0,
-            damping=0.4,
+            damping=10.0,
         ),
-        "ankles": ImplicitActuatorCfg(
-            joint_names_expr=["body_.*_ankle"],
-            effort_limit_sim=10.0,
-            velocity_limit_sim=10.0,
-            stiffness=20.0,
-            damping=0.2,
+        # ankles: passive by default, they keep the damping of the USD (0.05 Nm s/rad, as in Gazebo)
+        **(
+            {
+                "ankles": ImplicitActuatorCfg(
+                    joint_names_expr=["body_.*_ankle"],
+                    joint_effort_limit=10.0,
+                    joint_velocity_limit=10.0,
+                    stiffness=args_cli.ankle_stiffness,
+                    damping=0.2,
+                )
+            }
+            if args_cli.ankle_stiffness > 0.0
+            else {}
         ),
         "wheels": make_wheels_actuator_cfg(),
     }
@@ -179,11 +210,11 @@ def make_wheels_actuator_cfg():
 
     # velocity control: zero stiffness, damping acts as the velocity gain
     return ImplicitActuatorCfg(
-        joint_names_expr=["joint_wheel_.*"],
-        effort_limit_sim=10.0,
-        velocity_limit_sim=200.0,
+        joint_names_expr=[f"{WHEEL_JOINTS}.*"],
+        joint_effort_limit=WHEEL_MAX_TORQUE,
+        joint_velocity_limit=200.0,
         stiffness=0.0,
-        damping=0.5,
+        damping=WHEEL_DAMPING,
         # the wheels are tiny (r = 1.5 cm): armature improves the solver conditioning
         armature=0.001,
     )
@@ -212,7 +243,7 @@ def design_scene():
     robot_cfg = make_robot_cfg("/World/Traquad", (0.0, 0.0, 0.30))
     robot_cfg.spawn.func(robot_cfg.prim_path, robot_cfg.spawn, translation=robot_cfg.init_state.pos)
     make_floating_base(robot_cfg.prim_path)
-    if args_cli.wheel_friction is not None:
+    if args_cli.wheel_friction > 0.0:
         set_wheel_friction(robot_cfg.prim_path, args_cli.wheel_friction, args_cli.wheel_dynamic_friction)
     # the prim is already spawned, so the Articulation must not spawn it again
     robot_cfg.spawn = None
@@ -226,6 +257,8 @@ def make_floating_base(prim_path):
     The TraQuad USD was imported with a fixed base: the ArticulationRootAPI lives on a fixed joint
     to the world. Disabling that joint alone leaves the articulation without a valid root.
     """
+
+    from pxr import PhysxSchema, UsdPhysics
 
     stage = sim_utils.get_current_stage()
 
@@ -272,20 +305,16 @@ def set_wheel_friction(prim_path, friction, dynamic_friction=None):
     )
     material_cfg.func(material_path, material_cfg)
 
-    stage = sim_utils.get_current_stage()
-    wheels = sim_utils.get_all_matching_child_prims(prim_path, lambda p: p.GetName().startswith("wheel_"), depth=1)
+    from pxr import UsdPhysics
 
-    num_colliders = 0
-    for wheel in wheels:
-        # the colliders live inside an instanced prim, which cannot be edited: de-instance it first
-        collisions = stage.GetPrimAtPath(wheel.GetPath().AppendChild("collisions"))
-        if collisions.IsValid() and collisions.IsInstance():
-            collisions.SetInstanceable(False)
-        for collider in sim_utils.get_all_matching_child_prims(wheel.GetPath(), lambda p: p.HasAPI(UsdPhysics.CollisionAPI)):
-            sim_utils.bind_physics_material(collider.GetPath(), material_path)
-            num_colliders += 1
+    # colliders of the wheels (and of their rollers), at any depth: the links of the USD are nested
+    colliders = sim_utils.get_all_matching_child_prims(
+        prim_path, lambda p: p.HasAPI(UsdPhysics.CollisionAPI) and "/wheel_" in str(p.GetPath())
+    )
+    for collider in colliders:
+        sim_utils.bind_physics_material(collider.GetPath(), material_path)
 
-    print(f"[INFO] Wheel friction set to static {friction} / dynamic {dynamic_friction} on {num_colliders} colliders of {len(wheels)} wheels")
+    print(f"[INFO] Wheel friction set to static {friction} / dynamic {dynamic_friction} on {len(colliders)} colliders")
 
 
 # =====================================================================
@@ -299,7 +328,7 @@ def twist_to_wheel_velocities(robot, left_ids, right_ids, lin_vel, ang_vel):
     v_left = lin_vel - ang_vel * width / 2.0
     v_right = lin_vel + ang_vel * width / 2.0
 
-    joint_vel = torch.zeros_like(robot.data.joint_vel)
+    joint_vel = torch.zeros_like(robot.data.joint_vel.torch)
     joint_vel[:, left_ids] = LEFT_SIGN * v_left / WHEEL_RADIUS
     joint_vel[:, right_ids] = RIGHT_SIGN * v_right / WHEEL_RADIUS
 
@@ -330,6 +359,12 @@ def main():
         dt=1.0 / 200.0,
         device=args_cli.device,
     )
+    with launch_simulation(sim_cfg, args_cli):
+        run(sim_cfg)
+
+
+def run(sim_cfg):
+
     sim = sim_utils.SimulationContext(sim_cfg)
     sim.set_camera_view(eye=(1.5, 1.5, 1.0), target=(0.0, 0.0, 0.1))
 
@@ -340,14 +375,15 @@ def main():
     print("[INFO] TraQuad joints:", robot.joint_names)
     print("[INFO] Fixed base:", robot.is_fixed_base)
 
-    left_ids, _ = robot.find_joints("joint_wheel_.*_LEFT_.*")
-    right_ids, _ = robot.find_joints("joint_wheel_.*_RIGHT_.*")
-    print(f"[INFO] {len(left_ids)} left wheels, {len(right_ids)} right wheels")
+    left_ids, _ = robot.find_joints(f"{WHEEL_JOINTS}LEFT_.*")
+    right_ids, _ = robot.find_joints(f"{WHEEL_JOINTS}RIGHT_.*")
+    print(f"[INFO] {args_cli.model} model: {len(left_ids)} left, {len(right_ids)} right driven wheels")
 
     # start directly in the stance and hold legs and ankles there
-    pose_target = robot.data.default_joint_pos.clone()
-    robot.write_joint_state_to_sim(pose_target, torch.zeros_like(pose_target))
-    robot.set_joint_position_target(pose_target)
+    pose_target = robot.data.default_joint_pos.torch.clone()
+    robot.write_joint_position_to_sim_index(position=pose_target)
+    robot.write_joint_velocity_to_sim_index(velocity=torch.zeros_like(pose_target))
+    robot.actuators.target_command.set_position_index(value=pose_target)
 
     leg_ids, _ = robot.find_joints([".*HFE", "body_.*_ankle"])
 
@@ -359,13 +395,13 @@ def main():
     count = 0
     leg_dev = 0.0
 
-    while simulation_app.is_running():
+    while sim.is_running():
 
         lin_vel, ang_vel = get_command(sim_time)
 
         wheel_vel = twist_to_wheel_velocities(robot, left_ids, right_ids, lin_vel, ang_vel)
-        robot.set_joint_position_target(pose_target)
-        robot.set_joint_velocity_target(wheel_vel)
+        robot.actuators.target_command.set_position_index(value=pose_target)
+        robot.actuators.target_command.set_velocity_index(value=wheel_vel)
         robot.write_data_to_sim()
 
         sim.step()
@@ -375,12 +411,13 @@ def main():
         robot.update(sim_dt)
 
         # largest deviation of HFE/ankle joints from the stance since the last print
-        leg_dev = max(leg_dev, (robot.data.joint_pos[0, leg_ids] - pose_target[0, leg_ids]).abs().max().item())
+        leg_dev = max(leg_dev, (robot.data.joint_pos.torch[0, leg_ids] - pose_target[0, leg_ids]).abs().max().item())
 
         if count % 200 == 0:
-            quat = robot.data.root_quat_w
-            lin_b = quat_apply_inverse(quat, robot.data.root_lin_vel_w)[0]
-            ang_b = quat_apply_inverse(quat, robot.data.root_ang_vel_w)[0]
+            # quaternions are (x, y, z, w) in Isaac Lab 3.0, as expected by quat_apply_inverse
+            quat = robot.data.root_quat_w.torch
+            lin_b = quat_apply_inverse(quat, robot.data.root_lin_vel_w.torch)[0]
+            ang_b = quat_apply_inverse(quat, robot.data.root_ang_vel_w.torch)[0]
             leg_dev_print = leg_dev
             leg_dev = 0.0
             print(
@@ -393,5 +430,3 @@ def main():
 if __name__ == "__main__":
 
     main()
-
-    simulation_app.close()

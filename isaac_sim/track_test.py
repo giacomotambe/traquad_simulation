@@ -1,10 +1,16 @@
 """Traquad standard maneuver in Isaac Sim (PhysX), same setup and metrics as the Gazebo tests.
 
 Maneuver (simulated time): 3 s settle, 8 s rotation in place (w = 0.5 rad/s), 2 s stop,
-10 s turn (v = 0.2 m/s, w = 0.5 rad/s), 2 s stop. Logs the base pose to CSV and prints
-the yaw ratio, the lateral drift and the final pose error vs the ideal unicycle.
+10 s turn (v = 0.2 m/s, w = 0.5 rad/s), 2 s stop, 5 s straight (v = 0.2 m/s). Logs the base pose to CSV and prints
+the yaw ratio, the lateral drift and the final pose error vs the ideal unicycle, plus
+- jitter: standard deviation of the vertical acceleration of the base in the straight phase (after 1 s)
+- wheel torque demand: mean |torque| of the driven wheels over their limit, and time at the limit, per phase
+- stability (whole run after the first 0.5 s): 99th percentile of |base vertical acceleration|, max |roll/pitch
+  rate| of the base, max |velocity| of rollers and ankles, NaN check.
+Works with both track models: with the cylinder model only the driven wheels (wheel 2, not mimic followers) are
+commanded. Wheel gain and torque limit are read from the USD (written by finalize_usd.py) unless overridden.
 
-usage: ./isaac.sh track_test.py --usd <robot.usda> --out <csv> [--damping d] [--mu 0.5] [--info]
+usage: ./isaac.sh track_test.py --usd <robot.usda> --out <csv> [--damping d] [--mu 0.5] [--mu_dyn 0.45] [--info]
 """
 import argparse
 import csv
@@ -14,8 +20,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--usd', required=True)
 parser.add_argument('--out', required=True)
 parser.add_argument('--damping', type=float, default=1e-4, help='roller joint damping [Nms/rad]')
-parser.add_argument('--mu', type=float, default=0.5, help='isotropic friction of ground and robot')
+parser.add_argument('--roller_friction', type=float, default=None,
+                    help='roller joint dry friction [Nm] (default: from the USD, 0.06)')
+parser.add_argument('--mu', type=float, default=0.75,
+                    help='isotropic (static) friction of ground and robot (0.75 = effective value of open_traquad.py)')
+parser.add_argument('--mu_dyn', type=float, default=None, help='dynamic friction (default: same as --mu)')
+parser.add_argument('--wheel_kd', type=float, default=None, help='driven wheel velocity gain (default: from the USD)')
+parser.add_argument('--wheel_max', type=float, default=None, help='driven wheel torque limit (default: from the USD)')
 parser.add_argument('--dt', type=float, default=0.001)
+parser.add_argument('--friction_corr', type=float, default=None,
+                    help='PhysX friction correlation distance [m] (default 0.025): contacts closer than this share '
+                         'one friction anchor')
 parser.add_argument('--info', action='store_true', help='only check settle state and forward motion')
 args, _ = parser.parse_known_args()
 
@@ -23,6 +38,7 @@ from isaacsim import SimulationApp  # noqa: E402
 
 app = SimulationApp({'headless': True})
 
+import carb  # noqa: E402
 import numpy as np  # noqa: E402
 import omni.usd  # noqa: E402
 import isaacsim.core.experimental.utils.app as app_utils  # noqa: E402
@@ -37,7 +53,11 @@ print('ENGINE', SimulationManager.get_active_physics_engine(), flush=True)
 R, B = 0.015, 0.395
 HFE_TARGET = {'LF_HFE': 1.13, 'LH_HFE': -1.13, 'RF_HFE': -1.13, 'RH_HFE': 1.13}
 PHASES = [('settle', 0.0, 0.0, 3.0), ('yaw', 0.0, 0.5, 8.0), ('stop1', 0.0, 0.0, 2.0),
-          ('curve', 0.2, 0.5, 10.0), ('stop2', 0.0, 0.0, 2.0)]
+          ('curve', 0.2, 0.5, 10.0), ('stop2', 0.0, 0.0, 2.0), ('straight', 0.2, 0.0, 5.0)]
+MU_DYN = args.mu if args.mu_dyn is None else args.mu_dyn
+# exact (analytic) cylinder colliders unless this is set
+print('collisionApproximateCylinders:', carb.settings.get_settings().get('/physics/collisionApproximateCylinders'),
+      flush=True)
 
 
 async def build():
@@ -49,7 +69,7 @@ async def build():
     mat = UsdShade.Material.Define(stage, '/World/PhysicsMaterial')
     m = UsdPhysics.MaterialAPI.Apply(mat.GetPrim())
     m.CreateStaticFrictionAttr().Set(args.mu)
-    m.CreateDynamicFrictionAttr().Set(args.mu)
+    m.CreateDynamicFrictionAttr().Set(MU_DYN)
     m.CreateRestitutionAttr().Set(0.0)
     # ground: infinite static plane at z = 0
     UsdGeom.Xform.Define(stage, '/World/Ground')
@@ -78,6 +98,8 @@ async def build():
         if ps.IsA(UsdPhysics.Scene):
             px = PhysxSchema.PhysxSceneAPI.Apply(ps)
             px.CreateSolverTypeAttr().Set('TGS')
+            if args.friction_corr is not None:
+                px.CreateFrictionCorrelationDistanceAttr().Set(args.friction_corr)
             ps.GetAttribute('physxScene:enableGPUDynamics').Set(False) if ps.GetAttribute(
                 'physxScene:enableGPUDynamics') else None
     await app_utils.update_app_async()
@@ -86,6 +108,18 @@ async def build():
     print('articulation roots:', roots, flush=True)
     # no self-collisions inside the robot (as in Gazebo); PhysX enables them by default
     PhysxSchema.PhysxArticulationAPI.Apply(stage.GetPrimAtPath(roots[0])).CreateEnabledSelfCollisionsAttr().Set(False)
+    # wheel drives written in the USD; mimic followers (cylinder model) have no drive
+    global FOLLOWERS, USD_WHEEL
+    FOLLOWERS, USD_WHEEL = set(), {}
+    for p in stage.Traverse():
+        if not str(p.GetPath()).startswith('/World/robot') or not p.GetName().startswith('joint_wheel_'):
+            continue
+        rel = p.GetRelationship('newton:mimicJoint')
+        if rel and rel.GetTargets():
+            FOLLOWERS.add(p.GetName())
+        elif p.HasAPI(UsdPhysics.DriveAPI, 'angular'):
+            d = UsdPhysics.DriveAPI(p, 'angular')
+            USD_WHEEL = {'kd': d.GetDampingAttr().Get() * 180.0 / math.pi, 'max': d.GetMaxForceAttr().Get()}
     return Articulation(roots[0])
 
 
@@ -97,19 +131,25 @@ names = robot.dof_names
 N = len(names)
 idx = {n: i for i, n in enumerate(names)}
 hfe = [idx[n] for n in HFE_TARGET]
-wheels_l = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'LEFT' in n]
-wheels_r = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'RIGHT' in n]
+wheels_l = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'LEFT' in n and n not in FOLLOWERS]
+wheels_r = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'RIGHT' in n and n not in FOLLOWERS]
+WHEEL_KD = USD_WHEEL['kd'] if args.wheel_kd is None else args.wheel_kd
+WHEEL_MAX = USD_WHEEL['max'] if args.wheel_max is None else args.wheel_max
 ankles = [i for n, i in idx.items() if n.endswith('_ankle')]
 rollers = [i for n, i in idx.items() if '_roller_' in n]
-print(f'DOFs {N}: hfe {len(hfe)} wheels {len(wheels_l)}+{len(wheels_r)} ankles {len(ankles)} rollers {len(rollers)}',
-      flush=True)
+print(f'DOFs {N}: hfe {len(hfe)} driven wheels {len(wheels_l)}+{len(wheels_r)} mimic wheels {len(FOLLOWERS)} '
+      f'ankles {len(ankles)} rollers {len(rollers)} | wheel kd {WHEEL_KD:g} max {WHEEL_MAX:g} Nm | '
+      f'mu {args.mu}/{MU_DYN} dt {args.dt}', flush=True)
 
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
 kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 5.0
-kd[wheels_l + wheels_r] = 1000.0; fmax[wheels_l + wheels_r] = 10.0
+kd[wheels_l + wheels_r] = WHEEL_KD; fmax[wheels_l + wheels_r] = WHEEL_MAX
 kd[ankles] = 0.05
 kd[rollers] = args.damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
+if rollers and args.roller_friction is not None:
+    tau = np.full((1, len(rollers)), args.roller_friction, np.float32)
+    robot.set_dof_friction_properties(static_frictions=tau, dynamic_frictions=tau, dof_indices=rollers)
 robot.set_dof_max_efforts(fmax[None])
 pos_t = np.zeros(N, np.float32)
 for n, q in HFE_TARGET.items():
@@ -172,12 +212,27 @@ if args.info:
     app.close()
     raise SystemExit
 
-rows, t, log_every = [], 0.0, 50
+driven = wheels_l + wheels_r
+rows, t, log_every = [], 0.0, max(1, int(round(0.05 / args.dt)))
+torque = {}        # phase -> list of |torque| / limit of the driven wheels, every step
+vz_straight = []   # base vertical velocity in the straight phase, every step
+stab = {'vz': [], 'wxy': [], 'roller': [], 'ankle': [], 'nan': False}
 for name, v, w, dur in PHASES:
     send(v, w)
     for k in range(int(round(dur / args.dt))):
         SimulationManager.step(steps=1)
         t += args.dt
+        tau = robot.get_dof_projected_joint_forces().numpy()[0, driven]
+        torque.setdefault(name, []).append(np.abs(tau) / WHEEL_MAX)
+        lin, ang = (x.numpy()[0] for x in robot.get_velocities())
+        if name == 'straight' and k * args.dt >= 1.0:
+            vz_straight.append(lin[2])
+        if t >= 0.5:
+            dv = robot.get_dof_velocities().numpy()[0]
+            stab['nan'] |= bool(np.isnan(lin).any() or np.isnan(dv).any())
+            stab['vz'].append(lin[2]); stab['wxy'].append(np.abs(ang[:2]).max())
+            stab['roller'].append(np.abs(dv[rollers]).max() if rollers else 0.0)
+            stab['ankle'].append(np.abs(dv[ankles]).max())
         if k % log_every == 0:
             p, yaw, vx, vy, wz = state()
             rows.append([round(t, 3), name, v, w, p[0], p[1], p[2], yaw, vx, vy, wz])
@@ -193,6 +248,17 @@ m1 = (ph == 'yaw') & (a[:, 0] > 5.0)
 m2 = (ph == 'curve') & (a[:, 0] > 15.0)
 print(f'RESULT yaw_in_place {a[m1, 5].mean() / 0.5 * 100:.0f}% | yaw_turn {a[m2, 5].mean() / 0.5 * 100:.0f}% '
       f'| drift_turn {np.abs(a[m2, 4]).mean():.3f} m/s | z {rows[-1][6]:.3f}', flush=True)
+ms = (ph == 'straight') & (a[:, 0] > a[ph == 'straight', 0].min() + 1.0)
+az = np.diff(np.array(vz_straight)) / args.dt
+print(f'RESULT straight_speed {a[ms, 0].size and np.hypot(np.diff(a[ms, 1]), np.diff(a[ms, 2])).sum() / (a[ms, 0][-1] - a[ms, 0][0]):.3f} m/s '
+      f'(cmd 0.2) | jitter std(base z acc) {az.std():.3f} m/s^2', flush=True)
+az_all = np.abs(np.diff(np.array(stab['vz'])) / args.dt)
+print(f"RESULT stability: p99 |base z acc| {np.percentile(az_all, 99):.2f} m/s^2 | max |roll/pitch rate| "
+      f"{max(stab['wxy']):.3f} rad/s | max |roller vel| {max(stab['roller']):.0f} rad/s | max |ankle vel| "
+      f"{max(stab['ankle']):.2f} rad/s | NaN {stab['nan']}", flush=True)
+print('RESULT wheel torque demand (mean |tau|/limit, time at >= 95% of the limit): ' + ' | '.join(
+    f'{p} {np.mean(torque[p]):.2f} {np.mean(np.array(torque[p]) >= 0.95) * 100:.0f}%'
+    for p in ('settle', 'yaw', 'curve', 'straight')), flush=True)
 
 
 def ideal(p, v, w, T):

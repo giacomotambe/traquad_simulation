@@ -17,7 +17,7 @@ parser.add_argument('--angle', type=float, default=20.0)
 parser.add_argument('--tau_a', type=float, default=0.0)
 parser.add_argument('--tau_b', type=float, default=0.018)
 parser.add_argument('--roller_damping', type=float, default=1e-4)
-parser.add_argument('--mass', type=float, default=6.5)
+parser.add_argument('--mass', type=float, default=7.8)
 parser.add_argument('--duration', type=float, default=8.0)
 args, _ = parser.parse_known_args()
 
@@ -117,15 +117,15 @@ for robot, (path, x, tau) in zip(robots, ROBOTS):
     wheels = [i for n, i in idx.items() if n.startswith('joint_wheel_')]
     rollers = [i for n, i in idx.items() if '_roller_' in n]
     kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-    kp[hfe] = 100.0; kd[hfe] = 0.4; fmax[hfe] = 5.0
-    kp[ankles] = 20.0; kd[ankles] = 0.2; fmax[ankles] = 10.0
+    kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 5.0
+    kd[ankles] = 0.05   # passive ankles, as in Gazebo and in the asset
     kd[wheels] = 0.5; fmax[wheels] = 10.0
     kd[rollers] = args.roller_damping
     robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
     robot.set_dof_max_efforts(fmax[None])
     arm = np.zeros(N, np.float32); arm[wheels] = 0.001
     robot.set_dof_armatures(arm[None])
-    if tau > 0:
+    if rollers:
         t_ = np.full((1, len(rollers)), tau, np.float32)
         robot.set_dof_friction_properties(static_frictions=t_, dynamic_frictions=t_, dof_indices=rollers)
     masses = robot.get_link_masses().numpy()

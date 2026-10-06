@@ -1,10 +1,10 @@
 #!/bin/bash
 # Side-slope matrix: roller dry friction x slope angle (+ cylindrical wheels as reference). Results in ./results
-# usage: ./ramp_batch.sh <rollers.usda> [cylinders.usda]      MASS (default 6.5) and DAMPING (default 1e-4) via env
+# usage: ./ramp_batch.sh <rollers.usda> [cylinders.usda]      MASS (default 7.8) and DAMPING (default 1e-4) via env
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=$HERE/results
 mkdir -p "$OUT"
-MASS=${MASS:-6.5}
+MASS=${MASS:-7.8}
 DAMPING=${DAMPING:-1e-4}
 ANGLES="5 10 15 20 25 30 35 40"
 if [ -n "$2" ]; then

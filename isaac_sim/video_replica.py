@@ -1,8 +1,10 @@
-"""Render a video of the open_traquad.py setup (roller wheels) in Isaac Sim with a follow camera.
+"""Render a video of the open_traquad.py setup in Isaac Sim with a follow camera.
 
 Frames are saved as PNG named by simulated time, with the command and the measured body velocities
-written on them.
-usage: ./isaac.sh video_replica.py --usd <robot.usda> --out <frames_dir> [--roller_damping 1e-4]
+written on them. Works with both track models: with the cylinder model only the driven wheels (wheel 2, not
+the mimic followers) are commanded. Track motor as in open_traquad.py: 40 Nm and 2 Nm s/rad per track, split over
+its driven wheels. --csv logs command and measured velocities of every frame.
+usage: ./isaac.sh video_replica.py --usd <robot.usda> --out <frames_dir> [--roller_damping 1e-4] [--csv log.csv]
 """
 import argparse
 import math
@@ -12,8 +14,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--usd', required=True)
 parser.add_argument('--out', required=True)
 parser.add_argument('--roller_damping', type=float, default=1e-4)
-parser.add_argument('--roller_friction', type=float, default=0.0, help='dry friction of the roller joints [Nm]')
+parser.add_argument('--roller_friction', type=float, default=0.06, help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.06 = asset value)')
 parser.add_argument('--track_width', type=float, default=0.395)
+parser.add_argument('--csv', default=None, help='log t, command and measured velocities to this CSV')
 args, _ = parser.parse_known_args()
 
 from isaacsim import SimulationApp  # noqa: E402
@@ -110,16 +113,23 @@ N = len(names)
 idx = {n: i for i, n in enumerate(names)}
 hfe = [idx[n] for n in ('LF_HFE', 'LH_HFE', 'RF_HFE', 'RH_HFE')]
 ankles = [i for n, i in idx.items() if n.endswith('_ankle')]
-left = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'LEFT' in n]
-right = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'RIGHT' in n]
+# mimic followers (cylinder model) have no drive: only the leader wheel of each track is commanded
+FOLLOWERS = set()
+for p in omni.usd.get_context().get_stage().Traverse():
+    rel = p.GetRelationship('newton:mimicJoint') if p.GetName().startswith('joint_wheel_') else None
+    if rel and rel.GetTargets():
+        FOLLOWERS.add(p.GetName())
+left = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'LEFT' in n and n not in FOLLOWERS]
+right = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'RIGHT' in n and n not in FOLLOWERS]
 rollers = [i for n, i in idx.items() if '_roller_' in n]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-kp[hfe] = 100.0; kd[hfe] = 0.4; fmax[hfe] = 5.0
-kp[ankles] = 20.0; kd[ankles] = 0.2; fmax[ankles] = 10.0
-kd[left + right] = 0.5; fmax[left + right] = 10.0
+kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 5.0
+kd[ankles] = 0.05   # passive ankles, as in Gazebo and in the asset
+per_track = len(left) / 2                          # driven wheels per track: 4 (rollers) or 1 (cylinder)
+kd[left + right] = 2.0 / per_track; fmax[left + right] = 40.0 / per_track
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
-if rollers and args.roller_friction > 0:
+if rollers:
     tau = np.full((1, len(rollers)), args.roller_friction, np.float32)
     robot.set_dof_friction_properties(static_frictions=tau, dynamic_frictions=tau, dof_indices=rollers)
 robot.set_dof_max_efforts(fmax[None])
@@ -157,6 +167,8 @@ except OSError:
 
 t0 = SimulationManager.get_simulation_time()
 n_saved = 0
+log = []
+MODEL = f'roller wheels, roller friction {args.roller_friction:g} Nm' if rollers else 'cylinder wheels (mimic)'
 cmd = (0.0, 0.0)
 while True:
     t = SimulationManager.get_simulation_time() - t0
@@ -185,10 +197,15 @@ while True:
     img = Image.fromarray(np.asarray(data.numpy())[..., :3].astype(np.uint8))
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, 1280, 84], fill=(255, 255, 255))
-    d.text((20, 10), f'Isaac Sim (PhysX) - roller wheels, damping {args.roller_damping:g}, dry friction {args.roller_friction:g} Nm - t = {t:5.2f} s', fill=(20, 20, 20), font=font)
+    d.text((20, 10), f'Isaac Sim (PhysX) - {MODEL} - t = {t:5.2f} s', fill=(20, 20, 20), font=font)
     d.text((20, 46), f'command  v = {v:+.2f} m/s  w = {w:+.2f} rad/s      measured  v = {vx:+.2f} m/s  w = {wz:+.2f} rad/s',
            fill=(20, 20, 20), font=font)
+    log.append([round(t, 3), v, w, round(vx, 4), round(wz, 4)])
     img.save(os.path.join(args.out, f'{t:08.3f}.png'))
     n_saved += 1
+if args.csv:
+    import csv
+    with open(args.csv, 'w', newline='') as fh:
+        csv.writer(fh).writerows([['t', 'v_cmd', 'w_cmd', 'vx', 'wz']] + log)
 print('frames saved', n_saved, 'sim time', round(SimulationManager.get_simulation_time() - t0, 2), flush=True)
 app.close()

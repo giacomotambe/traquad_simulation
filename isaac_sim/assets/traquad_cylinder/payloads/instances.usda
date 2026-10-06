@@ -205,14 +205,14 @@ def Scope "Instances"
         )
         {
             custom rel material:binding
-            prepend rel material:binding = </Instances/wheel/VisualMaterials/wheel_4_LEFT_H_material>
+            prepend rel material:binding = </Instances/wheel/VisualMaterials/wheel_1_LEFT_H_material>
         }
 
         def Scope "VisualMaterials"
         {
-            def Material "wheel_4_LEFT_H_material" (
+            def Material "wheel_1_LEFT_H_material" (
                 instanceable = true
-                prepend references = @./materials.usda@</Materials/wheel_4_LEFT_H_material>
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
             )
             {
             }
@@ -228,14 +228,14 @@ def Scope "Instances"
         )
         {
             custom rel material:binding
-            prepend rel material:binding = </Instances/wheel_1/VisualMaterials/wheel_4_LEFT_F_material>
+            prepend rel material:binding = </Instances/wheel_1/VisualMaterials/wheel_2_LEFT_H_material>
         }
 
         def Scope "VisualMaterials"
         {
-            def Material "wheel_4_LEFT_F_material" (
+            def Material "wheel_2_LEFT_H_material" (
                 instanceable = true
-                prepend references = @./materials.usda@</Materials/wheel_4_LEFT_H_material>
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
             )
             {
             }
@@ -251,14 +251,14 @@ def Scope "Instances"
         )
         {
             custom rel material:binding
-            prepend rel material:binding = </Instances/wheel_2/VisualMaterials/wheel_4_RIGHT_F_material>
+            prepend rel material:binding = </Instances/wheel_2/VisualMaterials/wheel_3_LEFT_H_material>
         }
 
         def Scope "VisualMaterials"
         {
-            def Material "wheel_4_RIGHT_F_material" (
+            def Material "wheel_3_LEFT_H_material" (
                 instanceable = true
-                prepend references = @./materials.usda@</Materials/wheel_4_LEFT_H_material>
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
             )
             {
             }
@@ -274,14 +274,290 @@ def Scope "Instances"
         )
         {
             custom rel material:binding
-            prepend rel material:binding = </Instances/wheel_3/VisualMaterials/wheel_4_RIGHT_H_material>
+            prepend rel material:binding = </Instances/wheel_3/VisualMaterials/wheel_4_LEFT_H_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_4_LEFT_H_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_4" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_4/VisualMaterials/wheel_1_LEFT_F_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_1_LEFT_F_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_5" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_5/VisualMaterials/wheel_2_LEFT_F_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_2_LEFT_F_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_6" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_6/VisualMaterials/wheel_3_LEFT_F_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_3_LEFT_F_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_7" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_7/VisualMaterials/wheel_4_LEFT_F_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_4_LEFT_F_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_8" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_8/VisualMaterials/wheel_1_RIGHT_F_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_1_RIGHT_F_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_9" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_9/VisualMaterials/wheel_2_RIGHT_F_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_2_RIGHT_F_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_10" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_10/VisualMaterials/wheel_3_RIGHT_F_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_3_RIGHT_F_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_11" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_11/VisualMaterials/wheel_4_RIGHT_F_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_4_RIGHT_F_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_12" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_12/VisualMaterials/wheel_1_RIGHT_H_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_1_RIGHT_H_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_13" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_13/VisualMaterials/wheel_2_RIGHT_H_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_2_RIGHT_H_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_14" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_14/VisualMaterials/wheel_3_RIGHT_H_material>
+        }
+
+        def Scope "VisualMaterials"
+        {
+            def Material "wheel_3_RIGHT_H_material" (
+                instanceable = true
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
+            )
+            {
+            }
+        }
+    }
+
+    def Xform "wheel_15" (
+        prepend references = @./geometries.usd@</Geometries/wheel>
+    )
+    {
+        over "wheel" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            custom rel material:binding
+            prepend rel material:binding = </Instances/wheel_15/VisualMaterials/wheel_4_RIGHT_H_material>
         }
 
         def Scope "VisualMaterials"
         {
             def Material "wheel_4_RIGHT_H_material" (
                 instanceable = true
-                prepend references = @./materials.usda@</Materials/wheel_4_LEFT_H_material>
+                prepend references = @./materials.usda@</Materials/wheel_1_LEFT_H_material>
             )
             {
             }

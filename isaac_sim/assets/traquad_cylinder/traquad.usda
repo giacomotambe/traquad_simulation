@@ -1,0 +1,539 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.3.2"
+    }
+    defaultPrim = "traquad"
+    endTimeCode = 1000000
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    startTimeCode = 0
+    upAxis = "Z"
+)
+
+def Xform "traquad" (
+    prepend references = @./payloads/base.usda@
+    variants = {
+        string Physics = "physx"
+    }
+    append variantSets = "Physics"
+)
+{
+    over "Geometry"
+    {
+        over "base_link" (
+            prepend apiSchemas = ["PhysxArticulationAPI"]
+        )
+        {
+            bool physxArticulation:enabledSelfCollisions = 0
+
+            over "LH_UPPER_LEG"
+            {
+                over "body_left_H"
+                {
+                    over "wheel_1_LEFT_H"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_2_LEFT_H"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_3_LEFT_H"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_4_LEFT_H"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "box" (
+                        prepend apiSchemas = ["PhysxCollisionAPI"]
+                    )
+                    {
+                        float physxCollision:contactOffset = 0.003
+                        float physxCollision:restOffset = 0
+                    }
+                }
+            }
+
+            over "LF_UPPER_LEG"
+            {
+                over "body_left_F"
+                {
+                    over "wheel_1_LEFT_F"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_2_LEFT_F"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_3_LEFT_F"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_4_LEFT_F"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "box" (
+                        prepend apiSchemas = ["PhysxCollisionAPI"]
+                    )
+                    {
+                        float physxCollision:contactOffset = 0.003
+                        float physxCollision:restOffset = 0
+                    }
+                }
+            }
+
+            over "RF_UPPER_LEG"
+            {
+                over "body_right_F"
+                {
+                    over "wheel_1_RIGHT_F"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_2_RIGHT_F"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_3_RIGHT_F"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_4_RIGHT_F"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "box" (
+                        prepend apiSchemas = ["PhysxCollisionAPI"]
+                    )
+                    {
+                        float physxCollision:contactOffset = 0.003
+                        float physxCollision:restOffset = 0
+                    }
+                }
+            }
+
+            over "RH_UPPER_LEG"
+            {
+                over "body_right_H"
+                {
+                    over "wheel_1_RIGHT_H"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_2_RIGHT_H"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_3_RIGHT_H"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "wheel_4_RIGHT_H"
+                    {
+                        over "cylinder" (
+                            prepend apiSchemas = ["PhysxCollisionAPI"]
+                        )
+                        {
+                            float physxCollision:contactOffset = 0.003
+                            float physxCollision:restOffset = 0
+                        }
+                    }
+
+                    over "box" (
+                        prepend apiSchemas = ["PhysxCollisionAPI"]
+                    )
+                    {
+                        float physxCollision:contactOffset = 0.003
+                        float physxCollision:restOffset = 0
+                    }
+                }
+            }
+        }
+    }
+
+    over "Physics"
+    {
+        over "body_left_H_ankle" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float drive:angular:physics:damping = 0.0008726646
+            float drive:angular:physics:maxForce = 1000
+            float drive:angular:physics:stiffness = 0
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+        }
+
+        over "joint_wheel_1_LEFT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "joint_wheel_2_LEFT_H" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular", "PhysxJointAPI"]
+        )
+        {
+            float drive:angular:physics:damping = 0.034906585
+            float drive:angular:physics:maxForce = 40
+            float drive:angular:physics:stiffness = 0
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+            float physxJoint:armature = 0.001
+        }
+
+        over "joint_wheel_3_LEFT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "joint_wheel_4_LEFT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "body_left_F_ankle" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float drive:angular:physics:damping = 0.0008726646
+            float drive:angular:physics:maxForce = 1000
+            float drive:angular:physics:stiffness = 0
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+        }
+
+        over "joint_wheel_1_LEFT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "joint_wheel_2_LEFT_F" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular", "PhysxJointAPI"]
+        )
+        {
+            float drive:angular:physics:damping = 0.034906585
+            float drive:angular:physics:maxForce = 40
+            float drive:angular:physics:stiffness = 0
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+            float physxJoint:armature = 0.001
+        }
+
+        over "joint_wheel_3_LEFT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "joint_wheel_4_LEFT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "body_right_F_ankle" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float drive:angular:physics:damping = 0.0008726646
+            float drive:angular:physics:maxForce = 1000
+            float drive:angular:physics:stiffness = 0
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+        }
+
+        over "joint_wheel_1_RIGHT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "joint_wheel_2_RIGHT_F" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular", "PhysxJointAPI"]
+        )
+        {
+            float drive:angular:physics:damping = 0.034906585
+            float drive:angular:physics:maxForce = 40
+            float drive:angular:physics:stiffness = 0
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+            float physxJoint:armature = 0.001
+        }
+
+        over "joint_wheel_3_RIGHT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "joint_wheel_4_RIGHT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "body_right_H_ankle" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float drive:angular:physics:damping = 0.0008726646
+            float drive:angular:physics:maxForce = 1000
+            float drive:angular:physics:stiffness = 0
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+        }
+
+        over "joint_wheel_1_RIGHT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "joint_wheel_2_RIGHT_H" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular", "PhysxJointAPI"]
+        )
+        {
+            float drive:angular:physics:damping = 0.034906585
+            float drive:angular:physics:maxForce = 40
+            float drive:angular:physics:stiffness = 0
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+            float physxJoint:armature = 0.001
+        }
+
+        over "joint_wheel_3_RIGHT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "joint_wheel_4_RIGHT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float physics:lowerLimit = -10000000
+            float physics:upperLimit = 10000000
+        }
+
+        over "LH_HFE" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float drive:angular:physics:damping = 0.17453292
+            float drive:angular:physics:maxForce = 5
+            float drive:angular:physics:stiffness = 1.7453293
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+        }
+
+        over "LF_HFE" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float drive:angular:physics:damping = 0.17453292
+            float drive:angular:physics:maxForce = 5
+            float drive:angular:physics:stiffness = 1.7453293
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+        }
+
+        over "RF_HFE" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float drive:angular:physics:damping = 0.17453292
+            float drive:angular:physics:maxForce = 5
+            float drive:angular:physics:stiffness = 1.7453293
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+        }
+
+        over "RH_HFE" (
+            prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+        )
+        {
+            float drive:angular:physics:damping = 0.17453292
+            float drive:angular:physics:maxForce = 5
+            float drive:angular:physics:stiffness = 1.7453293
+            float drive:angular:physics:targetPosition = 0
+            float drive:angular:physics:targetVelocity = 0
+            uniform token drive:angular:physics:type = "force"
+        }
+    }
+    variantSet "Physics" = {
+        "mujoco" (
+            prepend payload = @./payloads/Physics/mujoco.usda@
+        ) {
+
+        }
+        "none" {
+
+        }
+        "physics" (
+            prepend payload = @./payloads/Physics/physics.usda@
+        ) {
+
+        }
+        "physx" (
+            prepend payload = @./payloads/Physics/physx.usda@
+        ) {
+
+        }
+    }
+}
+

@@ -479,6 +479,12 @@ over "traquad"
                         {
                         }
                     }
+
+                    over "box" (
+                        prepend apiSchemas = ["NewtonCollisionAPI"]
+                    )
+                    {
+                    }
                 }
 
                 over "box" (
@@ -940,6 +946,12 @@ over "traquad"
                         )
                         {
                         }
+                    }
+
+                    over "box" (
+                        prepend apiSchemas = ["NewtonCollisionAPI"]
+                    )
+                    {
                     }
                 }
 
@@ -1403,6 +1415,12 @@ over "traquad"
                         {
                         }
                     }
+
+                    over "box" (
+                        prepend apiSchemas = ["NewtonCollisionAPI"]
+                    )
+                    {
+                    }
                 }
 
                 over "box" (
@@ -1864,6 +1882,12 @@ over "traquad"
                         )
                         {
                         }
+                    }
+
+                    over "box" (
+                        prepend apiSchemas = ["NewtonCollisionAPI"]
+                    )
+                    {
                     }
                 }
 

@@ -4,7 +4,7 @@
         string creator = "URDF USD Converter v0.3.2"
     }
     defaultPrim = "traquad"
-    doc = """Generated from Composed Stage of root layer /home/punk-opc/traquad_gazebo/isaac_sim/assets/traquad/payloads/base.usd
+    doc = """Generated from Composed Stage of root layer /tmp/tmp.KeX0QrUKWh/usd/traquad/payloads/base.usd
 """
     endTimeCode = 1000000
     kilogramsPerUnit = 1
@@ -24,7 +24,7 @@ def Xform "traquad" (
     kind = "component"
 )
 {
-    float3[] extentsHint = [(-0.50048625, -0.2250004, -0.093779296), (0.500486, 0.22500038, 0.0937795), (3.4028235e38, 3.4028235e38, 3.4028235e38), (-3.4028235e38, -3.4028235e38, -3.4028235e38), (3.4028235e38, 3.4028235e38, 3.4028235e38), (-3.4028235e38, -3.4028235e38, -3.4028235e38), (-0.49964318, -0.2250004, -0.0916777), (0.49964333, 0.22500038, 0.0925)]
+    float3[] extentsHint = [(-0.50048625, -0.2250004, -0.093779296), (0.500486, 0.22500038, 0.0937795), (3.4028235e38, 3.4028235e38, 3.4028235e38), (-3.4028235e38, -3.4028235e38, -3.4028235e38), (3.4028235e38, 3.4028235e38, 3.4028235e38), (-3.4028235e38, -3.4028235e38, -3.4028235e38), (-0.49964318, -0.22500023, -0.0916777), (0.49964333, 0.22500023, 0.0925)]
 
     def Scope "Materials"
     {
@@ -1075,15 +1075,16 @@ def Xform "traquad" (
                         }
                     }
 
-                    def Xform "body_left_1" (
-                        displayName = "body_left"
-                        instanceable = true
-                        prepend references = @./instances.usda@</Instances/body_left_1>
+                    def Cube "box" (
+                        prepend apiSchemas = ["PhysicsCollisionAPI"]
                     )
                     {
-                        quatd xformOp:orient = (0.000001326794859, 0, 0, 1)
-                        double3 xformOp:scale = (1, 1, 1)
-                        double3 xformOp:translate = (0, 0, 0)
+                        float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                        uniform token purpose = "guide"
+                        double size = 1
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (0.05, 0.1417, 0.0869)
+                        double3 xformOp:translate = (0.025, -0.0119, -0.0174)
                         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
                     }
                 }
@@ -1129,7 +1130,7 @@ def Xform "traquad" (
 
                     def Xform "body_left" (
                         instanceable = true
-                        prepend references = @./instances.usda@</Instances/body_left_2>
+                        prepend references = @./instances.usda@</Instances/body_left_1>
                     )
                     {
                         quatd xformOp:orient = (0.000001326794859, 0, 0, 1)
@@ -2047,15 +2048,16 @@ def Xform "traquad" (
                         }
                     }
 
-                    def Xform "body_left_1" (
-                        displayName = "body_left"
-                        instanceable = true
-                        prepend references = @./instances.usda@</Instances/body_left_1>
+                    def Cube "box" (
+                        prepend apiSchemas = ["PhysicsCollisionAPI"]
                     )
                     {
-                        quatd xformOp:orient = (0.000001326794859, 0, 0, 1)
-                        double3 xformOp:scale = (1, 1, 1)
-                        double3 xformOp:translate = (0, 0, 0)
+                        float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                        uniform token purpose = "guide"
+                        double size = 1
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (0.05, 0.1417, 0.0869)
+                        double3 xformOp:translate = (0.025, -0.0119, -0.0174)
                         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
                     }
                 }
@@ -3019,15 +3021,16 @@ def Xform "traquad" (
                         }
                     }
 
-                    def Xform "body_right_1" (
-                        displayName = "body_right"
-                        instanceable = true
-                        prepend references = @./instances.usda@</Instances/body_right_1>
+                    def Cube "box" (
+                        prepend apiSchemas = ["PhysicsCollisionAPI"]
                     )
                     {
-                        quatd xformOp:orient = (9.381839732e-7, -9.381873838e-7, 0.7071080804, -0.7071054578)
-                        double3 xformOp:scale = (1, 1, 1)
-                        double3 xformOp:translate = (0, 0, 0)
+                        float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                        uniform token purpose = "guide"
+                        double size = 1
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (0.05, 0.0869, 0.1417)
+                        double3 xformOp:translate = (-0.025, 0.0174, -0.0119)
                         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
                     }
                 }
@@ -3073,7 +3076,7 @@ def Xform "traquad" (
 
                     def Xform "body_right" (
                         instanceable = true
-                        prepend references = @./instances.usda@</Instances/body_right_2>
+                        prepend references = @./instances.usda@</Instances/body_right_1>
                     )
                     {
                         quatd xformOp:orient = (9.381839732e-7, -9.381873838e-7, 0.7071080804, -0.7071054578)
@@ -3991,15 +3994,16 @@ def Xform "traquad" (
                         }
                     }
 
-                    def Xform "body_right_1" (
-                        displayName = "body_right"
-                        instanceable = true
-                        prepend references = @./instances.usda@</Instances/body_right_1>
+                    def Cube "box" (
+                        prepend apiSchemas = ["PhysicsCollisionAPI"]
                     )
                     {
-                        quatd xformOp:orient = (9.381839732e-7, -9.381873838e-7, 0.7071080804, -0.7071054578)
-                        double3 xformOp:scale = (1, 1, 1)
-                        double3 xformOp:translate = (0, 0, 0)
+                        float3[] extent = [(-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)]
+                        uniform token purpose = "guide"
+                        double size = 1
+                        quatf xformOp:orient = (1, 0, 0, 0)
+                        float3 xformOp:scale = (0.05, 0.0869, 0.1417)
+                        double3 xformOp:translate = (-0.025, 0.0174, -0.0119)
                         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
                     }
                 }
