@@ -58,7 +58,8 @@ The TraQuad code for Isaac Lab lives in `../isaaclab_overlay/` (versioned in thi
   in the air) and RSL-RL agents (rough: 15000 iterations, flat: 5000)
 - `Isaac-Velocity-Mixed-TraQuad` (`mixed_env_cfg.py`, the training task): the rough task on flat 15%, rough noise
   1-6 cm 15%, stairs and inverted stairs 2-10 cm 15% + 15%, boxes 2-10 cm 10%, pyramid and inverted pyramid slopes
-  0-40 deg 15% + 15% (5 cm cells, slope threshold 0.9: 40 deg slopes stay smooth, steps stay vertical); one friction
+  0-40 deg 15% + 15% (10 cm cells, slope threshold 0.9: 40 deg slopes stay smooth; stairs and boxes are meshes
+  with vertical steps; 5 cm cells ran out of GPU memory with 1024 robots); one friction
   per robot for the whole training, static 0.6-1.3, dynamic 0.3-1.0 (<= static); 10% standing commands; rewards:
   lin_vel_z_l2 -0.02, stand_still_wheels (wheel speeds at zero command) -0.002, track_slip (mean belt speed - base
   speed) -0.1. Logs in `logs/rsl_rl/traquad_mixed`.
