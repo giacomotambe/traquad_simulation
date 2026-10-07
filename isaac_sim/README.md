@@ -45,7 +45,9 @@ The TraQuad code for Isaac Lab lives in `../isaaclab_overlay/` (versioned in thi
   (found through the layout `traquad_simulation/isaaclab_traquad/...`, or the `TRAQUAD_USD` variable)
 - `source/isaaclab_tasks/isaaclab_tasks/contrib/traquad/`: tasks `Isaac-Velocity-Flat-TraQuad` and
   `Isaac-Velocity-Rough-TraQuad` (PhysX backend), with their MDP terms (one velocity action per track, wheel rewards,
-  roller dry friction randomized in 0.02-0.06 N m; commands v and w in [-1, 1], 1 unit of track action = 1.3 m/s;
+  wheel-ground friction randomized per robot (static 0.3-1.0, dynamic 0.8-1.0 x static, same on all its colliders),
+  roller dry friction fixed at 0.06 N m (a property of the robot); commands v and w in [-1, 1], 1 unit of track action
+  = 1.3 m/s;
   leg power penalty and per-track stuck recovery reward) and RSL-RL agents (rough: 15000 iterations, flat: 5000)
 
 On this machine `../isaaclab_traquad` also keeps `logs/`, `outputs/`, `isaac_model/` (runs of the Isaac Lab 2.x fork)
@@ -144,6 +146,12 @@ exceeds tau / r_roller, so the robot holds lateral forces up to about 12 * tau /
   more vibration; 0.1 -> 75% / 71%. Parked (7.8 kg): tau 0 slides under any push or slope; 0.02 holds 20 N and 20 deg;
   0.06 holds 40 N and 20 deg, creeps a few mm/s at 25-35 deg; every model slides at 40 deg (mu 0.75). Roller damping
   matters little below 1e-4 (friction dominates); 1e-2 halves the rotation.
+- Lateral grip when parked, tau 0.06 vs 0.02 against the wheel-ground friction mu (`ramp_test.py` / `lateral_force.py
+  --mu`, which also print the roller speed, 2026-10-07). With tau 0.06 the rollers never turn: the robot slides on the
+  ground as a block, at tan(slope) > mu (mu 0.3 / 0.5 / 0.75 / 1.0: slides at 20 / 30 / 40 / 40-45 deg) and at a push of
+  about mu*m*g (30 / 40 / 50 / 60 N). With tau 0.02 the rollers give way at about 30 N or 20-25 deg whatever mu is.
+  The rollers stay locked while tau > mu*m*g*r_roller/N_contacts = 0.052*mu (7.8 kg, 12 rollers): tau is a property of
+  the robot, the grip comes from mu.
 - The scripts of this folder use the current model: HFE Kd 10, passive ankles (damping 0.05), real mass 7.8 kg;
   `--roller_friction` is always applied (default 0.06, the asset value; 0 removes it). `video_replica.py` also
   handles the cylinder model (only the driven wheels are commanded) and logs velocities with `--csv`.

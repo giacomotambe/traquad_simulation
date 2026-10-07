@@ -13,6 +13,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--usd', required=True)
 parser.add_argument('--roller_friction', type=float, default=0.06,
                     help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.06 = asset value)')
+parser.add_argument('--mu', type=float, default=None,
+                    help='friction of ground and robot, same material on both (default: ground 1.0, robot default 0.5, '
+                         'i.e. 0.75 effective as in open_traquad.py)')
 parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--forces', type=float, nargs='+', default=[2.0, 5.0, 10.0, 20.0, 40.0])
 parser.add_argument('--push', type=float, default=3.0, help='push duration [s]')
@@ -45,8 +48,8 @@ async def build():
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
     mat = UsdShade.Material.Define(stage, '/World/GroundMaterial')
     m = UsdPhysics.MaterialAPI.Apply(mat.GetPrim())
-    m.CreateStaticFrictionAttr().Set(1.0)
-    m.CreateDynamicFrictionAttr().Set(1.0)
+    m.CreateStaticFrictionAttr().Set(1.0 if args.mu is None else args.mu)
+    m.CreateDynamicFrictionAttr().Set(1.0 if args.mu is None else args.mu)
     UsdGeom.Xform.Define(stage, '/World/Ground')
     plane = UsdGeom.Plane.Define(stage, '/World/Ground/Plane')
     plane.CreateAxisAttr().Set('Z')
@@ -57,6 +60,10 @@ async def build():
     robot_prim.GetVariantSets().GetVariantSet('Physics').SetVariantSelection('physx')
     UsdGeom.XformCommonAPI(robot_prim).SetTranslate(Gf.Vec3d(0.0, 0.0, 0.30))
     await app_utils.update_app_async()
+    if args.mu is not None:   # same material on every collider of the robot: wheel-ground friction = mu
+        for p in stage.Traverse():
+            if str(p.GetPath()).startswith('/World/robot') and p.HasAPI(UsdPhysics.CollisionAPI):
+                UsdShade.MaterialBindingAPI.Apply(p).Bind(mat, UsdShade.Tokens.strongerThanDescendants, 'physics')
     roots = [p for p in stage.Traverse()
              if str(p.GetPath()).startswith('/World/robot') and p.HasAPI(UsdPhysics.ArticulationRootAPI)]
     px = PhysxSchema.PhysxArticulationAPI.Apply(roots[0])
@@ -129,7 +136,7 @@ for F in args.forces:
     force = np.zeros((1, n_links, 3), np.float32)
     force[0, base, 1] = F                         # +y in the base frame
     f_wp = wp.array(force, dtype=wp.float32, device='cpu')
-    vy = []
+    vy, w_roll = [], []
     for k in range(int(args.push / DT)):
         view.apply_forces_and_torques_at_position(f_wp, None, None, indices, False)
         SimulationManager.step(steps=1)
@@ -138,9 +145,10 @@ for F in args.forces:
             p, yaw = pose()
             lin = lin.numpy()[0]
             vy.append(-math.sin(yaw) * lin[0] + math.cos(yaw) * lin[1])
+            w_roll.append(np.abs(robot.get_dof_velocities().numpy()[0][rollers]).mean() if rollers else 0.0)
     p1, yaw1 = pose()
     d = p1 - p0
     lat = -math.sin(yaw0) * d[0] + math.cos(yaw0) * d[1]
     print(f'RES d={args.roller_damping:g} tau={args.roller_friction:g} F={F:g} lateral_disp {lat:+.4f} m | vy_steady {np.mean(vy):+.4f} m/s '
-          f'| yaw {math.degrees(yaw1 - yaw0):+.2f} deg | z {p1[2]:.3f}', flush=True)
+          f'| roller_vel {np.mean(w_roll):.2f} rad/s | yaw {math.degrees(yaw1 - yaw0):+.2f} deg | z {p1[2]:.3f} | mu {args.mu}', flush=True)
 app.close()

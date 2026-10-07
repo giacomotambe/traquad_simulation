@@ -152,16 +152,13 @@ class EventsCfg:
     """Configuration for events."""
 
     # startup
-    physics_material = EventTerm(
-        func=mdp.randomize_rigid_body_material,
+    # the terrain: one wheel-ground friction per robot (slippery floor to rubber on asphalt), dynamic <= static.
+    # With the roller dry friction of the asset (0.06 N m, fixed: a property of the robot) the rollers stay locked
+    # when parked, so the lateral grip of the robot follows this friction (slides at tan(slope) > mu)
+    ground_friction = EventTerm(
+        func=mdp.randomize_ground_friction,
         mode="startup",
-        params={
-            "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (0.6, 1.3),
-            "dynamic_friction_range": (0.3, 1.0),
-            "restitution_range": (0.0, 0.0),
-            "num_buckets": 64,
-        },
+        params={"static_friction_range": (0.3, 1.0), "dynamic_ratio_range": (0.8, 1.0), "num_buckets": 256},
     )
 
     add_base_mass = EventTerm(
@@ -183,13 +180,6 @@ class EventsCfg:
             "force_range": (0.1, 0.3),
             "torque_range": (-0.2, 0.2),
         },
-    )
-
-    # roller dry friction not measured on the real robot yet: 0.02-0.06 N m, the range of the Isaac Sim tests
-    roller_friction = EventTerm(
-        func=mdp.randomize_roller_friction,
-        mode="startup",
-        params={"friction_range": (0.02, 0.06)},
     )
 
     reset_base = EventTerm(
