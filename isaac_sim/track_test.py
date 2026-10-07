@@ -35,6 +35,13 @@ parser.add_argument('--friction_corr', type=float, default=None,
 parser.add_argument('--info', action='store_true', help='only check settle state and forward motion')
 parser.add_argument('--hfe', type=float, default=1.47,
                     help='HFE stance [rad] (1.47: RL tasks and open_traquad.py; 1.13: earlier tests); ankles start flat')
+parser.add_argument('--slope', type=float, default=None,
+                    help='climb test instead of the maneuver: after settling, gravity is tilted so that the robot faces '
+                         'up a slope of this angle [deg]; 6 s at 0.2 m/s, then 3 s stopped')
+parser.add_argument('--slope_ramp', type=float, default=2.0, help='time over which the slope tilts in [s] (0: at once)')
+parser.add_argument('--sprocket_radius', type=float, default=None, help='drive sprocket radius [m] (default: ankle_control)')
+parser.add_argument('--no_sprocket_torque', action='store_true',
+                    help='no sprocket torque on the ankle on the ground (drive reaction stays in the track frame)')
 parser.add_argument('--no_coupling', action='store_true', help='ankles always passive (no velocity control in the air)')
 parser.add_argument('--ankle_range', type=float, default=None, help='ankle end stops +- this around the flat pose of the '
                     'default stance (0.1008) [rad] (default: from the USD, +-0.5236)')
@@ -60,8 +67,11 @@ print('ENGINE', SimulationManager.get_active_physics_engine(), flush=True)
 R, B = 0.015, 0.395
 HFE_TARGET = {'LF_HFE': args.hfe, 'LH_HFE': -args.hfe, 'RF_HFE': -args.hfe, 'RH_HFE': args.hfe}
 ANKLE_FLAT = math.pi / 2 - args.hfe   # |HFE| + |ankle| = pi/2: track flat on the ground
-PHASES = [('settle', 0.0, 0.0, 3.0), ('yaw', 0.0, 0.5, 8.0), ('stop1', 0.0, 0.0, 2.0),
-          ('curve', 0.2, 0.5, 10.0), ('stop2', 0.0, 0.0, 2.0), ('straight', 0.2, 0.0, 5.0)]
+if args.slope is not None:
+    PHASES = [('settle', 0.0, 0.0, 3.0), ('climb', 0.2, 0.0, 6.0), ('hold', 0.0, 0.0, 3.0)]
+else:
+    PHASES = [('settle', 0.0, 0.0, 3.0), ('yaw', 0.0, 0.5, 8.0), ('stop1', 0.0, 0.0, 2.0),
+              ('curve', 0.2, 0.5, 10.0), ('stop2', 0.0, 0.0, 2.0), ('straight', 0.2, 0.0, 5.0)]
 MU_DYN = args.mu if args.mu_dyn is None else args.mu_dyn
 # exact (analytic) cylinder colliders unless this is set
 print('collisionApproximateCylinders:', carb.settings.get_settings().get('/physics/collisionApproximateCylinders'),
@@ -158,7 +168,8 @@ kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e
 kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
 kd[wheels_l + wheels_r] = WHEEL_KD; fmax[wheels_l + wheels_r] = WHEEL_MAX
 kd[ankles] = PASSIVE_DAMPING if args.ankle_kd is None else args.ankle_kd   # passive ankle (velocity control in the air below)
-ankle_ctrl = AnkleController(robot, enabled=not args.no_coupling)
+ankle_ctrl = AnkleController(robot, enabled=not args.no_coupling, wheel_kd=None if args.no_sprocket_torque else WHEEL_KD,
+                             wheel_max=WHEEL_MAX, followers=FOLLOWERS, sprocket_radius=args.sprocket_radius)
 if args.ankle_range is not None:
     lo_, hi_ = (x.numpy() for x in robot.get_dof_limits())
     for n_, i_ in idx.items():
@@ -249,7 +260,12 @@ stab = {'vz': [], 'wxy': [], 'roller': [], 'ankle': [], 'nan': False, 'hfe_dev':
 lo_lim, hi_lim = (x.numpy()[0] for x in robot.get_dof_limits())
 for name, v, w, dur in PHASES:
     send(v, w)
+    scene_ = SimulationManager.get_physics_scenes()[0]
     for k in range(int(round(dur / args.dt))):
+        if name == 'climb' and k * args.dt <= args.slope_ramp:
+            # the robot faces +x after settling: gravity tilts progressively so that +x becomes uphill
+            th_ = math.radians(args.slope) * min(1.0, k * args.dt / max(args.slope_ramp, 1e-6))
+            scene_.set_gravity(Gf.Vec3f(-9.81 * math.sin(th_), 0.0, -9.81 * math.cos(th_)))
         SimulationManager.step(steps=1)
         t += args.dt
         tau = robot.get_dof_projected_joint_forces().numpy()[0, driven]
@@ -282,6 +298,25 @@ with open(args.out, 'w', newline='') as f:
     wr = csv.writer(f)
     wr.writerow(['t', 'phase', 'v_cmd', 'w_cmd', 'x', 'y', 'z', 'yaw', 'vx', 'vy', 'wz'])
     wr.writerows(rows)
+
+if args.slope is not None:
+    a = np.array([[r[0], r[8], r[4]] for r in rows])
+    ph = np.array([r[1] for r in rows])
+    mc = (ph == 'climb') & (a[:, 0] > 4.0)
+    mh = (ph == 'hold') & (a[:, 0] > a[ph == 'hold', 0].min() + 1.0)
+    x_c = a[ph == 'climb', 2]
+    print(f'RESULT slope {args.slope:g} deg, mu {args.mu}: climbing speed {a[mc, 1].mean():+.3f} m/s (cmd 0.2) | uphill '
+          f'progress {x_c[-1] - x_c[0]:+.2f} m in 6 s | stopped on the slope: {a[mh, 1].mean() * 1000:+.1f} mm/s', flush=True)
+    print(f"RESULT legs: max |HFE - target| {math.degrees(max(stab['hfe_dev'])):.2f} deg | time with an ankle at a stop "
+          f"{100 * np.mean(stab['at_stop']):.0f}%", flush=True)
+    for ph_, arr in stab['phase'].items():
+        a_ = np.array(arr)
+        print(f"PHASE {ph_:6s} HFE saturated {100 * a_[:, 4:8].any(1).mean():.0f}% | track motor torque mean / max [N m] "
+              + ' '.join(f'{np.abs(a_[:, 8 + j]).mean():.2f}/{np.abs(a_[:, 8 + j]).max():.2f}' for j in range(4))
+              + f' | HFE torque mean {a_[:, 12:16].mean():.2f} N m | ankle from flat mean [deg] '
+              + ' '.join(f'{math.degrees(x):+.1f}' for x in a_[:, :4].mean(0)), flush=True)
+    app.close()
+    raise SystemExit
 
 # metrics (same as Gazebo)
 a = np.array([[r[0], r[4], r[5], r[7], r[9], r[10]] for r in rows])

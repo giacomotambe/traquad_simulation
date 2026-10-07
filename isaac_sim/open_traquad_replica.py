@@ -88,8 +88,9 @@ rollers = [i for n, i in idx.items() if '_roller_' in n]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
 kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
 kd[ankles] = PASSIVE_DAMPING   # passive ankle; velocity control when the track is in the air (ankle_control)
-ankle_ctrl = AnkleController(robot)
-kd[left + right] = args.wheel_kd; fmax[left + right] = 10.0
+
+kd[left + right] = args.wheel_kd; fmax[left + right] = 0.375   # track motor 1.5 N m per track
+ankle_ctrl = AnkleController(robot, wheel_kd=args.wheel_kd, wheel_max=0.375)
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
 robot.set_dof_max_efforts(fmax[None])

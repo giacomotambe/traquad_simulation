@@ -20,6 +20,9 @@ parser.add_argument('--track_width', type=float, default=0.395)
 parser.add_argument('--track_max_torque', type=float, default=1.5, help='torque limit of a track motor [N m at r 15 mm]')
 parser.add_argument('--mu', type=float, default=None,
                     help='friction of ground and robot, same material on both (default: ground 1.0, robot default 0.5)')
+parser.add_argument('--slope', type=float, default=None,
+                    help='climb instead of the command sequence: gravity tilts to this slope [deg] (the robot faces uphill), '
+                         'the camera turns with gravity so the ground looks inclined')
 parser.add_argument('--csv', default=None, help='log t, command and measured velocities to this CSV')
 args, _ = parser.parse_known_args()
 
@@ -43,6 +46,8 @@ DT = 1.0 / 200.0
 R = 0.015
 DEMO = [(1.0, 0.0, 0.0), (4.0, 0.3, 0.0), (4.0, 0.0, 0.8), (4.0, 0.3, 0.5), (4.0, -0.3, 0.0), (4.0, 0.0, -0.8),
         (2.0, 0.0, 0.0)]
+if args.slope is not None:   # settle, tilt the slope in 2 s while starting to climb, climb, stop on the slope
+    DEMO = [(1.0, 0.0, 0.0), (2.0, 0.2, 0.0), (8.0, 0.2, 0.0), (3.0, 0.0, 0.0)]
 T_END = sum(d for d, _, _ in DEMO)
 STANCE = {'LF_HFE': 1.47, 'LH_HFE': -1.47, 'RF_HFE': -1.47, 'RH_HFE': 1.47,
           'body_left_F_ankle': 0.10, 'body_right_F_ankle': 0.10,
@@ -133,9 +138,10 @@ rollers = [i for n, i in idx.items() if '_roller_' in n]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
 kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
 kd[ankles] = PASSIVE_DAMPING   # passive ankle; velocity control when the track is in the air (ankle_control)
-ankle_ctrl = AnkleController(robot)
 per_track = len(left) / 2                          # driven wheels per track: 4 (rollers) or 1 (cylinder)
 kd[left + right] = 2.0 / per_track; fmax[left + right] = args.track_max_torque / per_track
+ankle_ctrl = AnkleController(robot, wheel_kd=2.0 / per_track, wheel_max=args.track_max_torque / per_track,
+                             followers=FOLLOWERS)
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
 if rollers:
@@ -159,10 +165,10 @@ def command(t):
     return 0.0, 0.0
 
 
-def look_at(eye, target):
+def look_at(eye, target, up=(0.0, 0.0, 1.0)):
     f = target - eye; f /= np.linalg.norm(f)
     z = -f
-    x = np.cross([0.0, 0.0, 1.0], z); x /= np.linalg.norm(x)
+    x = np.cross(up, z); x /= np.linalg.norm(x)
     y = np.cross(z, x)
     m = np.array([x, y, z]).T
     qw = math.sqrt(max(0.0, 1 + m[0, 0] + m[1, 1] + m[2, 2])) / 2
@@ -196,7 +202,12 @@ while True:
     p, q = robot.get_world_poses()
     p = p.numpy()[0]
     target = np.array([p[0], p[1], 0.12])
-    cam.set_world_poses(positions=[(target + CAM_OFFSET).tolist()], orientations=[look_at(target + CAM_OFFSET, target)])
+    up = np.array([0.0, 0.0, 1.0])
+    if args.slope is not None:
+        th = math.radians(args.slope) * float(np.clip((t - 1.0) / 2.0, 0.0, 1.0))
+        SimulationManager.get_physics_scenes()[0].set_gravity(Gf.Vec3f(-9.81 * math.sin(th), 0.0, -9.81 * math.cos(th)))
+        up = np.array([math.sin(th), 0.0, math.cos(th)])   # camera up along -gravity: the ground looks inclined
+    cam.set_world_poses(positions=[(target + CAM_OFFSET).tolist()], orientations=[look_at(target + CAM_OFFSET, target, up)])
     app.update()
     data, _ = sensor.get_data('rgb')
     if data is None:
@@ -210,7 +221,8 @@ while True:
     img = Image.fromarray(np.asarray(data.numpy())[..., :3].astype(np.uint8))
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, 1280, 84], fill=(255, 255, 255))
-    d.text((20, 10), f'Isaac Sim (PhysX) - {MODEL} - t = {t:5.2f} s', fill=(20, 20, 20), font=font)
+    slope_txt = f' - slope {math.degrees(math.atan2(up[0], up[2])):.0f} deg' if args.slope is not None else ''
+    d.text((20, 10), f'Isaac Sim (PhysX) - {MODEL}{slope_txt} - t = {t:5.2f} s', fill=(20, 20, 20), font=font)
     d.text((20, 46), f'command  v = {v:+.2f} m/s  w = {w:+.2f} rad/s      measured  v = {vx:+.2f} m/s  w = {wz:+.2f} rad/s',
            fill=(20, 20, 20), font=font)
     log.append([round(t, 3), v, w, round(vx, 4), round(wz, 4)])

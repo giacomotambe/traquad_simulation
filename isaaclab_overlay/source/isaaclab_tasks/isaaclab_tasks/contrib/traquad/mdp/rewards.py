@@ -122,3 +122,26 @@ def joint_vel_difference(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = Sce
     asset: Articulation = env.scene[asset_cfg.name]
     vel = asset.data.joint_vel.torch[:, asset_cfg.joint_ids]
     return torch.abs(vel[:, 0] - vel[:, 1])
+
+
+def stand_still_joint_vel_l1(
+    env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+) -> torch.Tensor:
+    """Joint speeds [rad/s] of the robots whose command is zero (L1), zero for the others."""
+    asset: Articulation = env.scene[asset_cfg.name]
+    command = env.command_manager.get_command(command_name)
+    standing = torch.linalg.norm(command[:, :3], dim=1) < 1e-3
+    return torch.sum(torch.abs(asset.data.joint_vel.torch[:, asset_cfg.joint_ids]), dim=1) * standing
+
+
+def track_slip_l1(env: ManagerBasedRLEnv, wheel_radius: float, asset_cfg: SceneEntityCfg) -> torch.Tensor:
+    """Longitudinal slip of the tracks [m/s]: mean belt speed minus forward speed of the base.
+
+    ``asset_cfg`` takes one wheel per track in the order LEFT_F, LEFT_H, RIGHT_F, RIGHT_H. The wheel joint axes are
+    along -y on the left and +y on the right, so the belt speed is -r w on the left and r w on the right. The mean over
+    the four tracks removes the opposite slips of left and right in turns, which skid steering needs.
+    """
+    asset: Articulation = env.scene[asset_cfg.name]
+    w = asset.data.joint_vel.torch[:, asset_cfg.joint_ids]
+    belt = wheel_radius * (-w[:, 0] - w[:, 1] + w[:, 2] + w[:, 3]) / 4.0
+    return torch.abs(belt - asset.data.root_lin_vel_b.torch[:, 0])

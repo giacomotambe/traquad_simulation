@@ -32,6 +32,7 @@ from isaaclab_assets.robots.traquad import (  # isort: skip
     ANKLE_INTEGRAL_GAIN,
     ANKLE_MAX_TORQUE,
     ANKLE_SPEED_GAIN,
+    ANKLE_SPROCKET_TORQUE_RATIO,
     ANKLE_VELOCITY_RATIO,
     TRAQUAD_CFG,
 )
@@ -96,6 +97,7 @@ class ActionsCfg:
         scale=WHEEL_VEL_SCALE,
         ankle_joint_name="body_left_F_ankle",
         ankle_velocity_ratio=ANKLE_VELOCITY_RATIO["LEFT"],
+        sprocket_torque_ratio=ANKLE_SPROCKET_TORQUE_RATIO["LEFT"],
         track_body_expr=r"body_left_F|wheel_\d_LEFT_F.*",
         speed_gain=ANKLE_SPEED_GAIN,
         integral_gain=ANKLE_INTEGRAL_GAIN,
@@ -107,6 +109,7 @@ class ActionsCfg:
         scale=WHEEL_VEL_SCALE,
         ankle_joint_name="body_left_H_ankle",
         ankle_velocity_ratio=ANKLE_VELOCITY_RATIO["LEFT"],
+        sprocket_torque_ratio=ANKLE_SPROCKET_TORQUE_RATIO["LEFT"],
         track_body_expr=r"body_left_H|wheel_\d_LEFT_H.*",
         speed_gain=ANKLE_SPEED_GAIN,
         integral_gain=ANKLE_INTEGRAL_GAIN,
@@ -118,6 +121,7 @@ class ActionsCfg:
         scale=WHEEL_VEL_SCALE,
         ankle_joint_name="body_right_F_ankle",
         ankle_velocity_ratio=ANKLE_VELOCITY_RATIO["RIGHT"],
+        sprocket_torque_ratio=ANKLE_SPROCKET_TORQUE_RATIO["RIGHT"],
         track_body_expr=r"body_right_F|wheel_\d_RIGHT_F.*",
         speed_gain=ANKLE_SPEED_GAIN,
         integral_gain=ANKLE_INTEGRAL_GAIN,
@@ -129,6 +133,7 @@ class ActionsCfg:
         scale=WHEEL_VEL_SCALE,
         ankle_joint_name="body_right_H_ankle",
         ankle_velocity_ratio=ANKLE_VELOCITY_RATIO["RIGHT"],
+        sprocket_torque_ratio=ANKLE_SPROCKET_TORQUE_RATIO["RIGHT"],
         track_body_expr=r"body_right_H|wheel_\d_RIGHT_H.*",
         speed_gain=ANKLE_SPEED_GAIN,
         integral_gain=ANKLE_INTEGRAL_GAIN,
@@ -190,14 +195,14 @@ class EventsCfg:
     """Configuration for events."""
 
     # startup
-    # the terrain: one wheel-ground friction per robot, dynamic <= static. Up to 0.8: above about 0.85 the traction
-    # tips the tracks onto their end stops in turns (pivot above the belt), see isaac_sim/README.md.
+    # the terrain: one wheel-ground friction per robot, dynamic <= static (static 0.6-1.3: rubber on wood, concrete,
+    # asphalt)
     # With the roller dry friction of the asset (0.06 N m, fixed: a property of the robot) the rollers stay locked
     # when parked, so the lateral grip of the robot follows this friction (slides at tan(slope) > mu)
     ground_friction = EventTerm(
         func=mdp.randomize_ground_friction,
         mode="startup",
-        params={"static_friction_range": (0.3, 0.8), "dynamic_ratio_range": (0.8, 1.0), "num_buckets": 256},
+        params={"static_friction_range": (0.6, 1.3), "dynamic_ratio_range": (0.8, 1.0), "num_buckets": 256},
     )
 
     add_base_mass = EventTerm(

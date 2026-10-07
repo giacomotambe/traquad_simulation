@@ -117,7 +117,7 @@ wheels = [i for n, i in idx.items() if n.startswith('joint_wheel_')]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
 kp[hfe] = 1e4; kd[hfe] = 100.0                      # hips locked
 kd[ankles] = PASSIVE_DAMPING if args.ankle_damping is None else args.ankle_damping   # passive ankles
-ankle_ctrl = AnkleController(robot, enabled=not args.no_control)
+ankle_ctrl = AnkleController(robot, enabled=not args.no_control, wheel_kd=0.5, wheel_max=0.375)
 kd[wheels] = 0.5; fmax[wheels] = 0.375              # track motor: 1.5 N m per track
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
 robot.set_dof_max_efforts(fmax[None])
@@ -203,7 +203,7 @@ while True:
     img = Image.fromarray(np.asarray(data.numpy())[..., :3].astype(np.uint8))
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, 1280, 84], fill=(255, 255, 255))
-    d.text((20, 10), f'Suspended Traquad, hips locked at HFE {args.hfe:.2f} rad - track motor coupled to the ankle - t = {t:5.2f} s',
+    d.text((20, 10), f'Suspended Traquad, hips locked at HFE {args.hfe:.2f} rad - {'motor unpowered, passive ankle' if args.no_control else 'track motor coupled to the ankle'} - t = {t:5.2f} s',
            fill=(20, 20, 20), font=font)
     d.text((20, 46), f'track speed command {v:+.2f} m/s      front-left ankle {math.degrees(rel[0]):+6.1f} deg from flat',
            fill=(20, 20, 20), font=font)

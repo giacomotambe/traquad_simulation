@@ -58,7 +58,10 @@ parser.add_argument(
     help="Torque limit of a track motor [Nm at r = 15 mm] (1.5 Nm = 100 N of belt force).",
 )
 parser.add_argument(
-    "--ankle_stiffness", type=float, default=0.0, help="Ankle PD stiffness [Nm/rad] (0: ankles coupled to the track motor, as the asset and the RL tasks)."
+    "--ankle_stiffness",
+    type=float,
+    default=0.0,
+    help="Ankle PD stiffness [Nm/rad] (0: ankle model of the asset and the RL tasks, driven by the track motor).",
 )
 add_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -96,10 +99,12 @@ WHEEL_RADIUS = 0.015  # [m]
 TRACK_WIDTH = 0.395
 # Skid-steer slip compensation: effective width > geometric width (tune if turning is too slow/fast)
 TRACK_WIDTH_FACTOR = 1.0
-# Ankle (same model as isaaclab_assets/robots/traquad.py): the drive sprocket is coaxial with the ankle. Passive on the
-# ground; with the track in the air a PI velocity controller turns the frame with the sprocket (v / SPROCKET_RADIUS)
-# until an end stop. Contact is taken from the height of the wheels above the flat ground of this script.
-SPROCKET_RADIUS = 0.015  # [m], placeholder until measured
+# Ankle (same model as isaaclab_assets/robots/traquad.py): the drive sprocket is coaxial with the ankle. On the ground
+# the ankle gets the torque of the sprocket on the track, (SPROCKET_RADIUS / WHEEL_RADIUS) x the wheel drive torque
+# (the simulated motor drives the wheels, the real one the belt from the pivot); with the track in the air a PI velocity
+# controller turns the frame with the sprocket (v / SPROCKET_RADIUS) until an end stop. Contact is taken from the
+# height of the wheels above the flat ground of this script.
+SPROCKET_RADIUS = 0.025  # [m], placeholder until measured
 ANKLE_PASSIVE_DAMPING = 0.01  # [N m s/rad]
 ANKLE_SPEED_GAIN = 0.2  # [N m s/rad]
 ANKLE_INTEGRAL_GAIN = 2.0  # [N m/rad]
@@ -218,7 +223,8 @@ def make_actuators_cfg():
                 joint_names_expr=["body_.*_ankle"],
                 stiffness=0.0,
                 damping=0.0,
-                actuator_effort_limit=ANKLE_MAX_TORQUE,
+                # the PI is clipped to ANKLE_MAX_TORQUE below; the sprocket torque can reach about 2.5 N m
+                actuator_effort_limit=5.0,
                 joint_velocity_limit=100.0,
                 viscous_friction=ANKLE_PASSIVE_DAMPING,
             )
@@ -365,25 +371,34 @@ class AnkleController:
             for fh in ("F", "H"):
                 ankle_id = robot.find_joints(f"body_{side}_{fh}_ankle")[0][0]
                 wheel_bodies = robot.find_bodies(f"wheel_[1-4]_{track}_{fh}")[0]
-                self.tracks.append((ankle_id, wheel_bodies, side == "left"))
-        self.ankle_ids = [a for a, _, _ in self.tracks]
+                wheel_joints = robot.find_joints(f"{WHEEL_JOINTS}{track}_{fh}")[0]
+                self.tracks.append((ankle_id, wheel_bodies, side == "left", wheel_joints))
+        self.ankle_ids = [a for a, _, _, _ in self.tracks]
         self.integral = torch.zeros(robot.num_instances, len(self.tracks), device=robot.device)
         self.air_time = torch.zeros_like(self.integral)
 
     def efforts(self, v_left, v_right):
         z = self.robot.data.body_pos_w.torch[:, :, 2]
-        off_ground = torch.stack([z[:, w].min(dim=1).values > WHEEL_RADIUS + CONTACT_MARGIN for _, w, _ in self.tracks], 1)
+        off_ground = torch.stack(
+            [z[:, w].min(dim=1).values > WHEEL_RADIUS + CONTACT_MARGIN for _, w, _, _ in self.tracks], 1
+        )
         self.air_time = torch.where(off_ground, self.air_time + self.dt, 0.0)
         in_air = self.air_time > AIR_DELAY   # debounce
         # ankle axes point along +y on both sides: in the air the sprocket (and the frame) turns with the wheels
-        target = torch.tensor([(v_left if left else v_right) / SPROCKET_RADIUS for _, _, left in self.tracks],
+        target = torch.tensor([(v_left if left else v_right) / SPROCKET_RADIUS for _, _, left, _ in self.tracks],
                               device=z.device)
         err = target - self.robot.data.joint_vel.torch[:, self.ankle_ids]
         tau_free = ANKLE_SPEED_GAIN * err + ANKLE_INTEGRAL_GAIN * self.integral
         grow = (tau_free.abs() < ANKLE_MAX_TORQUE) | (torch.sign(err) != torch.sign(tau_free))   # anti-windup
         self.integral = torch.where(in_air, self.integral + torch.where(grow, err * self.dt, 0.0), 0.0)
         tau = (ANKLE_SPEED_GAIN * err + ANKLE_INTEGRAL_GAIN * self.integral).clamp(-ANKLE_MAX_TORQUE, ANKLE_MAX_TORQUE)
-        return torch.where(in_air, tau, 0.0)
+        # on the ground: sprocket torque on the track. Wheel axes along -y (left) / +y (right), ankle axes along +y
+        effort = self.robot.actuators.applied_effort.torch
+        ratio = SPROCKET_RADIUS / WHEEL_RADIUS
+        sprocket = torch.stack(
+            [(-1.0 if left else 1.0) * ratio * effort[:, wj].sum(dim=1) for _, _, left, wj in self.tracks], 1
+        )
+        return torch.where(in_air, tau, sprocket)
 
 
 def get_command(t):

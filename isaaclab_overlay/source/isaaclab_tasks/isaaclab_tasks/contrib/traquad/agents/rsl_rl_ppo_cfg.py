@@ -57,3 +57,11 @@ class TraQuadFlatPPORunnerCfg(TraQuadRoughPPORunnerCfg):
 
         self.max_iterations = 5000
         self.experiment_name = "traquad_flat"
+
+
+@configclass
+class TraQuadMixedPPORunnerCfg(TraQuadRoughPPORunnerCfg):
+    def __post_init__(self):
+        super().__post_init__()
+
+        self.experiment_name = "traquad_mixed"

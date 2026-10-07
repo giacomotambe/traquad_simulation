@@ -22,8 +22,10 @@ class JointVelocityActionGroup(JointVelocityAction):
     drives the ankle of the track when the track is in the air (drive sprocket coaxial with the ankle): a PI velocity
     controller, run on every physics step, turns the ankle at wheel target x
     :attr:`JointVelocityActionGroupCfg.ankle_velocity_ratio`, so the track keeps turning at that speed, however small,
-    until an end stop. When any body of the track touches something (contact sensor) the controller gives no torque and
-    its integral is reset: the ankle is passive.
+    until an end stop. When any body of the track touches something (contact sensor) the ankle gets instead the torque
+    of the sprocket on the track, :attr:`JointVelocityActionGroupCfg.sprocket_torque_ratio` x the drive torque of the
+    track wheels (the simulated motor drives the wheels, the real one drives the belt from the pivot), and the integral
+    is reset.
     """
 
     cfg: JointVelocityActionGroupCfg
@@ -70,7 +72,9 @@ class JointVelocityActionGroup(JointVelocityAction):
         grow = (tau_free.abs() < self.cfg.max_torque) | (torch.sign(err) != torch.sign(tau_free))
         self._integral = torch.where(in_air, self._integral + torch.where(grow, err * self._dt, 0.0), 0.0)
         tau = self.cfg.speed_gain * err + self.cfg.integral_gain * self._integral
-        tau = torch.where(in_air, tau.clamp(-self.cfg.max_torque, self.cfg.max_torque), 0.0)
+        wheel_torque = self._asset.actuators.applied_effort.torch[:, self._joint_ids].sum(dim=1, keepdim=True)
+        sprocket = self.cfg.sprocket_torque_ratio * wheel_torque
+        tau = torch.where(in_air, tau.clamp(-self.cfg.max_torque, self.cfg.max_torque), sprocket)
         self._asset.set_joint_effort_target_index(target=tau, joint_ids=self._ankle_ids)
 
     def reset(self, env_ids=None):
@@ -113,6 +117,9 @@ class JointVelocityActionGroupCfg(JointVelocityActionCfg):
 
     max_torque: float = 0.05
     """Torque limit of the ankle velocity controller [N m]."""
+
+    sprocket_torque_ratio: float = 0.0
+    """Ankle torque per unit of summed wheel drive torque of the track, applied on the ground (0: none)."""
 
     air_delay: float = 0.05
     """Time the track must spend without contact before the ankle controller takes over [s]."""

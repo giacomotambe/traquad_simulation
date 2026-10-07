@@ -11,8 +11,10 @@ __all__ = [
     "joint_vel_sign_disagreement",
     "lin_vel_y_l2",
     "randomize_ground_friction",
+    "stand_still_joint_vel_l1",
     "track_air_time_stuck_recovery",
     "track_lin_vel_x_exp",
+    "track_slip_l1",
 ]
 
 from .actions import JointVelocityActionGroup, JointVelocityActionGroupCfg
@@ -22,7 +24,9 @@ from .rewards import (
     joint_vel_difference,
     joint_vel_sign_disagreement,
     lin_vel_y_l2,
+    stand_still_joint_vel_l1,
     track_air_time_stuck_recovery,
     track_lin_vel_x_exp,
+    track_slip_l1,
 )
 from isaaclab_tasks.core.velocity.mdp import *

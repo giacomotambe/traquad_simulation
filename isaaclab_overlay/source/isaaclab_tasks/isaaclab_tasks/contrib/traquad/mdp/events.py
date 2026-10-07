@@ -22,8 +22,9 @@ if TYPE_CHECKING:
 class randomize_ground_friction(ManagerTermBase):
     """Give each robot one wheel-ground friction, the same on all its colliders (PhysX).
 
-    It stands for the terrain the robot drives on: static friction sampled in ``static_friction_range``, dynamic
-    friction = static friction x a factor in ``dynamic_ratio_range`` (<= 1, so dynamic <= static). The ground of the
+    It stands for the terrain the robot drives on: static friction sampled in ``static_friction_range``; dynamic
+    friction either sampled on its own in ``dynamic_friction_range`` or = static friction x a factor in
+    ``dynamic_ratio_range``, and in both cases limited to the static friction (dynamic <= static). The ground of the
     velocity tasks has friction 1.0 with the "multiply" combine mode, which wins over the robot's "average", so the
     contact friction is the sampled value.
 
@@ -38,9 +39,13 @@ class randomize_ground_friction(ManagerTermBase):
         self.asset: Articulation = env.scene[cfg.params.get("asset_cfg", SceneEntityCfg("robot")).name]
         n = int(cfg.params["num_buckets"])
         s_lo, s_hi = cfg.params["static_friction_range"]
-        r_lo, r_hi = cfg.params["dynamic_ratio_range"]
         static = torch.empty(n).uniform_(s_lo, s_hi)
-        dynamic = static * torch.empty(n).uniform_(r_lo, r_hi)
+        if cfg.params.get("dynamic_friction_range") is not None:
+            d_lo, d_hi = cfg.params["dynamic_friction_range"]
+            dynamic = torch.minimum(torch.empty(n).uniform_(d_lo, d_hi), static)
+        else:
+            r_lo, r_hi = cfg.params["dynamic_ratio_range"]
+            dynamic = static * torch.empty(n).uniform_(r_lo, r_hi)
         self.buckets = torch.stack([static, dynamic, torch.zeros(n)], dim=1)   # (static, dynamic, restitution)
 
     def __call__(
@@ -48,8 +53,9 @@ class randomize_ground_friction(ManagerTermBase):
         env: ManagerBasedEnv,
         env_ids: torch.Tensor | None,
         static_friction_range: tuple[float, float],
-        dynamic_ratio_range: tuple[float, float],
         num_buckets: int,
+        dynamic_ratio_range: tuple[float, float] = (0.8, 1.0),
+        dynamic_friction_range: tuple[float, float] | None = None,
         asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
     ):
         if env_ids is None:

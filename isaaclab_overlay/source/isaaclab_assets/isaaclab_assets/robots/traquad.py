@@ -46,18 +46,23 @@ TRAQUAD_CYLINDER_USD_PATH = os.path.join(_REPO_DIR, "isaac_sim", "assets", "traq
 ##
 
 # On the real robot the track motor sits on the leg and drives a sprocket coaxial with the ankle; the track frame
-# pivots freely on the same axis, between mechanical end stops. On the ground the ankle is passive (the belt is held
-# by the ground and moves the robot). In the air belt and frame turn with the sprocket: the track action then also
+# pivots freely on the same axis, between mechanical end stops. On the ground the belt is held by the ground and moves
+# the robot; the ankle is free, but the sprocket drives the belt from the pivot: in the simulation the motor drives the
+# track wheels and its reaction stays in the track frame, so the track action applies to the ankle the torque the
+# sprocket puts on the track, (SPROCKET_RADIUS / WHEEL_RADIUS) x the drive torque of the track wheels. Without it the
+# traction pitches the track with F * h instead of F * (h - r_s), and the tracks tip on slopes the real robot climbs
+# (35 deg on wood). In the air belt and frame turn with the sprocket: the track action then also
 # velocity-controls the ankle at the speed that gives the commanded belt speed, w_target = v / SPROCKET_RADIUS, with a
 # PI controller (the integral removes the steady error due to gravity: the track keeps turning at w_target, however
 # small, until an end stop):
 #   tau_ankle = clip(ANKLE_SPEED_GAIN * e + ANKLE_INTEGRAL_GAIN * int(e dt), +-ANKLE_MAX_TORQUE),  e = w_target - dq
-#   tau_ankle = 0 and integral reset when a body of the track touches something (contact sensor of the task)
+#   tau_ankle = sprocket torque and integral reset when a body of the track touches something (contact sensor)
 # plus a passive viscous damping ANKLE_PASSIVE_DAMPING, always (physics solver).
 WHEEL_RADIUS = 0.015
 """Radius of the simulated track wheels [m]."""
-SPROCKET_RADIUS = 0.015
-"""Radius of the drive sprocket on the ankle axis [m] (placeholder until measured on the robot)."""
+SPROCKET_RADIUS = 0.025
+"""Radius of the drive sprocket on the ankle axis [m]. Placeholder until measured on the robot: the smallest value with
+which the model climbs a 35 deg slope at mu 0.75 without tipping its tracks (15 mm tipped them)."""
 ANKLE_PASSIVE_DAMPING = 0.01
 """Passive viscous damping of the ankle pivot [N m s/rad] (same value as the USD ankle drive)."""
 ANKLE_SPEED_GAIN = 0.2
@@ -69,6 +74,8 @@ ANKLE_MAX_TORQUE = 0.05
 ANKLE_VELOCITY_RATIO = {"LEFT": -WHEEL_RADIUS / SPROCKET_RADIUS, "RIGHT": WHEEL_RADIUS / SPROCKET_RADIUS}
 """Ankle velocity target per unit of wheel velocity target, by side. The wheel axes point along -y (left) and +y
 (right), the ankle axes of both sides along +y: the sprocket turns with the wheels."""
+ANKLE_SPROCKET_TORQUE_RATIO = {"LEFT": -SPROCKET_RADIUS / WHEEL_RADIUS, "RIGHT": SPROCKET_RADIUS / WHEEL_RADIUS}
+"""Ankle torque per unit of summed wheel drive torque of the track, by side (sprocket torque on the track)."""
 
 ##
 # Configuration
@@ -140,7 +147,8 @@ TRAQUAD_CFG = ArticulationCfg(
             joint_names_expr=["body_.*_ankle"],
             stiffness=0.0,
             damping=0.0,
-            actuator_effort_limit=ANKLE_MAX_TORQUE,
+            # the PI is clipped to ANKLE_MAX_TORQUE by the action; the sprocket torque can reach about 2.5 N m
+            actuator_effort_limit=5.0,
             joint_velocity_limit=100.0,
             viscous_friction=ANKLE_PASSIVE_DAMPING,
         ),
