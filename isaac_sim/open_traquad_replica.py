@@ -5,6 +5,7 @@ per command segment and the wheel speed tracking.
 usage: ./isaac.sh open_traquad_replica.py --usd <robot.usda> [--roller_damping d] [--wheel_kd 0.5]
 """
 import argparse
+from ankle_control import PASSIVE_DAMPING, SPROCKET_RADIUS, AnkleController
 import math
 
 parser = argparse.ArgumentParser()
@@ -85,8 +86,9 @@ right = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'RIGHT' i
 rollers = [i for n, i in idx.items() if '_roller_' in n]
 
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 5.0
-kd[ankles] = 0.05   # passive ankles, as in Gazebo and in the asset
+kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
+kd[ankles] = PASSIVE_DAMPING   # passive ankle; velocity control when the track is in the air (ankle_control)
+ankle_ctrl = AnkleController(robot)
 kd[left + right] = args.wheel_kd; fmax[left + right] = 10.0
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
@@ -123,6 +125,7 @@ for dur, v, w in DEMO:
     tgt[left] = -vl / R
     tgt[right] = vr / R
     robot.set_dof_velocity_targets(tgt[None])
+    ankle_ctrl.set_speeds(vl, vr)
     acc = []
     for k in range(int(dur / DT)):
         SimulationManager.step(steps=1)

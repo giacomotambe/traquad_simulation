@@ -9,17 +9,21 @@ ready for Isaac Sim / Isaac Lab (`sim_utils.UsdFileCfg(usd_path=...)`; used by `
   (xacro -> URDF -> URDF importer -> `finalize_usd.py`); rebuild it whenever the xacro changes.
 - Meshes are stored once in `payloads/geometries.usd` and referenced as instances (`instanceable = true`).
 - Physics variant `physx` selected, floating base, articulation self-collisions off.
-- Default drives written in the file: HFE PD Kp 100 / Kd 10, max 5 Nm; ankles passive (damping 0.05);
-  **rollers passive, damping 1e-4 Nm s/rad, dry friction 0.06 Nm**; wheels velocity drive with the track motor split
-  over the 4 wheels of a track: **40 Nm and 2 Nm s/rad per track at r = 15 mm (`--track_max_torque`,
-  `--track_damping`)**, i.e. 10 Nm and 0.5 Nm s/rad per wheel, armature 0.001. With a "realistic" 0.6 Nm per track
-  the robot turned at 16% of the command (real robot: much faster); a much lower gain leaves the wheels behind.
-- Wheel-ground friction 0.75 everywhere: open_traquad.py ground 1.0 averaged with the robot default 0.5,
-  track_test.py `--mu 0.75`, Gazebo `wheel_mu` 0.75 (ground SDF default 1.0, minimum). Rotation in place at w = 1
-  rad/s in open_traquad.py: 0.16 rad/s with 0.6 Nm/track and mu 0.5, 0.53 with 40 Nm/track, 0.84 with 40 Nm/track and
-  mu 0.75 (0.87 with stiff ankles). Track bodies collide as boxes, contact offset 3 mm on wheels, rollers and track bodies.
-  Roller dry friction: `physxJointAxis:angular:static/dynamicFrictionEffort`. Isaac Lab actuators override the joints they
-  match (HFE, ankles, wheels); the rollers keep the values of the file.
+- Default drives written in the file: HFE PD Kp 100 / Kd 10, max 10 Nm; ankles passive damping 0.01 Nm s/rad, end
+  stops +-30 deg around the flat pose of the default stance (HFE +-1.47, ankle +-0.1008); **rollers passive, damping
+  1e-4 Nm s/rad, dry friction 0.06 Nm**; wheels velocity drive with the track motor split over the 4 wheels of a track:
+  **1.5 Nm and 2 Nm s/rad per track at r = 15 mm (`--track_max_torque`, `--track_damping`)**, i.e. 0.375 Nm and
+  0.5 Nm s/rad per wheel, armature 0.001 (1.5 Nm = 100 N of belt force).
+- Ankle control (not in the file, added by the controllers: `ankle_control.py` here, the track action in Isaac Lab,
+  `../open_traquad.py`): the drive sprocket is coaxial with the ankle. Track touching the ground: ankle passive. Track
+  in the air for more than 50 ms: PI velocity control of the ankle towards v_track / r_sprocket (Kp 0.2 Nm s/rad,
+  Ki 2 Nm/rad, max 0.05 Nm, anti-windup), so the frame turns with the sprocket, however slow the command, until an
+  end stop; with no command it holds its angle.
+- Track mass: body 60% with its CoM placed so that the whole track has its CoM below the ankle axis when flat.
+- Wheel-ground friction 0.75 in the tests (open_traquad.py: ground 1.0 averaged with the robot default 0.5;
+  track_test.py `--mu 0.75`; Gazebo `wheel_mu` 0.75). Track bodies collide as boxes, contact offset 3 mm on wheels,
+  rollers and track bodies. Roller dry friction: `physxJointAxis:angular:static/dynamicFrictionEffort`. Isaac Lab
+  actuators override the joints they match (HFE, ankles, wheels); the rollers keep the values of the file.
 - Not in the file: the contact material (friction with the ground) and the ground itself.
 - **Needs Isaac Sim 6.1** (and Isaac Lab 3.0 for `../open_traquad.py`): the links are nested rigid bodies,
   which Isaac Sim 5.x does not parse (`CreateJoint - no bodies defined at body0 and body1` on every joint
@@ -45,10 +49,11 @@ The TraQuad code for Isaac Lab lives in `../isaaclab_overlay/` (versioned in thi
   (found through the layout `traquad_simulation/isaaclab_traquad/...`, or the `TRAQUAD_USD` variable)
 - `source/isaaclab_tasks/isaaclab_tasks/contrib/traquad/`: tasks `Isaac-Velocity-Flat-TraQuad` and
   `Isaac-Velocity-Rough-TraQuad` (PhysX backend), with their MDP terms (one velocity action per track, wheel rewards,
-  wheel-ground friction randomized per robot (static 0.3-1.0, dynamic 0.8-1.0 x static, same on all its colliders),
+  wheel-ground friction randomized per robot (static 0.3-0.8, dynamic 0.8-1.0 x static, same on all its colliders),
   roller dry friction fixed at 0.06 N m (a property of the robot); commands v and w in [-1, 1], 1 unit of track action
   = 1.3 m/s;
-  leg power penalty and per-track stuck recovery reward) and RSL-RL agents (rough: 15000 iterations, flat: 5000)
+  leg power penalty and per-track stuck recovery reward, default stance HFE +-1.47, ankles driven by the track action
+  in the air) and RSL-RL agents (rough: 15000 iterations, flat: 5000)
 
 On this machine `../isaaclab_traquad` also keeps `logs/`, `outputs/`, `isaac_model/` (runs of the Isaac Lab 2.x fork)
 and `_archive/isaaclab_traquad_2x_fork.tar.gz` (its sources: old TraQuad and OmniQuad tasks).
@@ -87,12 +92,17 @@ if it does not exist, `isaac.sh` uses the python of the active environment when 
 
 ## Test setup (`track_test.py`)
 
-- PhysX, 1 ms step, TGS solver, CPU; ground is a collision plane; isotropic friction 0.5 on ground and robot.
-- HFE: PD Kp = 100, Kd = 10, max 5 Nm, target ±1.13 rad. Wheels: velocity drive, max 10 Nm.
-  Ankles: passive, damping 0.05. Rollers: passive, damping `--damping`.
-- Initial state as in Gazebo: legs at target, tracks flat.
-- Maneuver: 3 s settle, 8 s rotation in place (ω = 0.5 rad/s), 2 s stop, 10 s turn (v = 0.2 m/s, ω = 0.5 rad/s), 2 s stop.
-  Track speeds from r = 0.015 m, B = 0.395 m.
+- PhysX, 1 ms step (`--dt`), TGS solver, CPU; ground is a collision plane; isotropic friction `--mu` (0.75) on ground
+  and robot.
+- HFE: PD Kp = 100, Kd = 10, max 10 Nm, stance `--hfe` (1.47, default stance; 1.13 in the earlier tests). Wheels:
+  velocity drive and torque limit from the USD (`--wheel_max` per wheel). Ankles: passive damping 0.01 plus the
+  ankle controller in the air (`--no_coupling`: passive only). Rollers: damping `--damping`, dry friction
+  `--roller_friction` (default: USD).
+- Initial state: legs at target, tracks flat.
+- Maneuver: 3 s settle, 8 s rotation in place (ω = 0.5 rad/s), 2 s stop, 10 s turn (v = 0.2 m/s, ω = 0.5 rad/s), 2 s
+  stop, 5 s straight. Track speeds from r = 0.015 m, B = 0.395 m. Besides yaw, drift and pose error it reports the
+  HFE deviation, the time with an ankle on an end stop, and per phase the ankle angles, the time the HFE are saturated
+  and the track motor torques.
 
 ## Scripts
 
@@ -105,6 +115,8 @@ if it does not exist, `isaac.sh` uses the python of the active environment when 
 | `friction_batch.sh` | for each roller dry friction: lateral push matrix + rotation sequence |
 | `ramp_test.py` / `ramp_batch.sh` | robot parked across a side slope (tilted gravity), mass set with `--mass`: holds or slides (friction x slope) |
 | `ramp_video.py` | two robots on a real inclined ramp with different roller dry friction |
+| `ankle_swing.py` | robot suspended, hips locked: tracks released from a tilt and/or driven by a sequence of track speeds (`--sequence "dur:v,..."`), side camera video, ankle angles to CSV |
+| `ankle_control.py` | ankle model shared by the scripts (passive on the ground, PI velocity control in the air, physics-step callback) |
 
 Roller dry friction (`--roller_friction`, Nm) is set at runtime with
 `set_dof_friction_properties` (static = dynamic) on the 96 roller joints; in URDF terms it is
@@ -146,6 +158,12 @@ exceeds tau / r_roller, so the robot holds lateral forces up to about 12 * tau /
   more vibration; 0.1 -> 75% / 71%. Parked (7.8 kg): tau 0 slides under any push or slope; 0.02 holds 20 N and 20 deg;
   0.06 holds 40 N and 20 deg, creeps a few mm/s at 25-35 deg; every model slides at 40 deg (mu 0.75). Roller damping
   matters little below 1e-4 (friction dominates); 1e-2 halves the rotation.
+- Tipping under traction (2026-10-07): the traction F acts below the ankle pivot (h = 73 mm) and pitches the track
+  with F (h - r); the track tips onto its end stop when F/N > (L/2)/(h - r) = 0.86, i.e. on high-friction ground.
+  With the final model (stance 1.47, stops +-30 deg, HFE 10 Nm) and 1.5 Nm per track: no tipping up to mu 0.8
+  (99% / 95% yaw), tipping from 0.85. 1 Nm per track turns at 80% and tips at 0.9; 40 Nm (old placeholder) tipped
+  even at 0.75 through torque spikes at command steps. At stance 1.13 the hips need 3.2-3.6 Nm to stand (1.5-1.6 at
+  1.47) and the tracks jammed in turns 30-70% of the time. Training samples mu in 0.3-0.8.
 - Lateral grip when parked, tau 0.06 vs 0.02 against the wheel-ground friction mu (`ramp_test.py` / `lateral_force.py
   --mu`, which also print the roller speed, 2026-10-07). With tau 0.06 the rollers never turn: the robot slides on the
   ground as a block, at tan(slope) > mu (mu 0.3 / 0.5 / 0.75 / 1.0: slides at 20 / 30 / 40 / 40-45 deg) and at a push of

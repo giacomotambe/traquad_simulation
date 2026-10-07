@@ -3,8 +3,9 @@ in Isaac Sim / Isaac Lab (Isaac Lab actuators still override the joints they con
 
 - Physics variant set to 'physx' (the importer leaves it unselected: no physics otherwise)
 - articulation self-collisions off
-- HFE: PD drive Kp 100 Nm/rad, Kd 10 Nm s/rad, max 5 Nm
-- ankles: passive, damping 0.05 Nm s/rad
+- HFE: PD drive Kp 100 Nm/rad, Kd 10 Nm s/rad, max 10 Nm (to be checked against the real hip motor)
+- ankles: passive damping 0.01 Nm s/rad. The controllers (Isaac Lab action, isaac_sim/ankle_control.py) add a
+  velocity control of the ankle when the track is in the air: the frame turns with the drive sprocket
 - driven wheels: velocity drive (stiffness 0), armature --wheel_armature. The motor of a track is described at the
   track: --track_max_torque and --track_damping (velocity gain), both referred to the 15 mm wheel radius, are split
   over the driven wheels of the track (4 in the roller model, 1 in the cylinder model)
@@ -28,7 +29,8 @@ parser.add_argument('--roller_friction', type=float, default=0.06)
 # track motor: 40 Nm per track (10 Nm per wheel, as the model that matched the real robot's rotation; with 0.6 Nm per
 # track the robot turned at 16% of the command). A velocity gain much lower than 2 Nm s/rad leaves the wheels behind
 # their target under load
-parser.add_argument('--track_max_torque', type=float, default=40.0, help='torque limit of a track [Nm at r 15 mm]')
+parser.add_argument('--track_max_torque', type=float, default=1.5,
+                    help='torque limit of a track [Nm at r 15 mm] (1.5 Nm = 100 N of belt force)')
 parser.add_argument('--track_damping', type=float, default=2.0, help='velocity gain of a track [Nm s/rad]')
 parser.add_argument('--wheel_armature', type=float, default=0.001, help='armature of each driven wheel [kg m^2]')
 parser.add_argument('--contact_offset', type=float, default=0.003, help='wheels, rollers and track bodies [m]')
@@ -98,7 +100,7 @@ for prim in stage.Traverse():
     if not prim.IsA(UsdPhysics.RevoluteJoint):
         continue
     if name.endswith('_HFE'):
-        drive(prim, 100.0, 10.0, 5.0); counts['hfe'] += 1
+        drive(prim, 100.0, 10.0, 10.0); counts['hfe'] += 1
     elif path in mimic_of:
         # follower wheel: moved by the mimic constraint only
         prim.RemoveAPI(UsdPhysics.DriveAPI, 'angular')
@@ -111,7 +113,7 @@ for prim in stage.Traverse():
     elif name.startswith('joint_wheel_'):
         drive_wheel(prim); counts['wheel'] += 1
     elif name.endswith('_ankle'):
-        drive(prim, 0.0, 0.05, 1000.0); counts['ankle'] += 1
+        drive(prim, 0.0, 0.01, 1000.0); counts['ankle'] += 1
     elif '_roller_' in name:
         drive(prim, 0.0, args.roller_damping, 1000.0)
         # dry friction: the roller turns only when the torque on it exceeds this value

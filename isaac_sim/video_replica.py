@@ -7,6 +7,7 @@ its driven wheels. --csv logs command and measured velocities of every frame.
 usage: ./isaac.sh video_replica.py --usd <robot.usda> --out <frames_dir> [--roller_damping 1e-4] [--csv log.csv]
 """
 import argparse
+from ankle_control import PASSIVE_DAMPING, SPROCKET_RADIUS, AnkleController
 import math
 import os
 
@@ -16,6 +17,9 @@ parser.add_argument('--out', required=True)
 parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--roller_friction', type=float, default=0.06, help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.06 = asset value)')
 parser.add_argument('--track_width', type=float, default=0.395)
+parser.add_argument('--track_max_torque', type=float, default=1.5, help='torque limit of a track motor [N m at r 15 mm]')
+parser.add_argument('--mu', type=float, default=None,
+                    help='friction of ground and robot, same material on both (default: ground 1.0, robot default 0.5)')
 parser.add_argument('--csv', default=None, help='log t, command and measured velocities to this CSV')
 args, _ = parser.parse_known_args()
 
@@ -53,8 +57,8 @@ async def build():
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
     mat = UsdShade.Material.Define(stage, '/World/GroundMaterial')
     m = UsdPhysics.MaterialAPI.Apply(mat.GetPrim())
-    m.CreateStaticFrictionAttr().Set(1.0)
-    m.CreateDynamicFrictionAttr().Set(1.0)
+    m.CreateStaticFrictionAttr().Set(1.0 if args.mu is None else args.mu)
+    m.CreateDynamicFrictionAttr().Set(1.0 if args.mu is None else args.mu)
     UsdGeom.Xform.Define(stage, '/World/Ground')
     plane = UsdGeom.Plane.Define(stage, '/World/Ground/Plane')
     plane.CreateAxisAttr().Set('Z')
@@ -82,6 +86,10 @@ async def build():
     robot_prim.GetVariantSets().GetVariantSet('Physics').SetVariantSelection('physx')
     UsdGeom.XformCommonAPI(robot_prim).SetTranslate(Gf.Vec3d(0.0, 0.0, 0.30))
     await app_utils.update_app_async()
+    if args.mu is not None:   # same material on every collider of the robot: wheel-ground friction = mu
+        for p in stage.Traverse():
+            if str(p.GetPath()).startswith('/World/robot') and p.HasAPI(UsdPhysics.CollisionAPI):
+                UsdShade.MaterialBindingAPI.Apply(p).Bind(mat, UsdShade.Tokens.strongerThanDescendants, 'physics')
     roots = [p for p in stage.Traverse()
              if str(p.GetPath()).startswith('/World/robot') and p.HasAPI(UsdPhysics.ArticulationRootAPI)]
     px = PhysxSchema.PhysxArticulationAPI.Apply(roots[0])
@@ -123,10 +131,11 @@ left = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'LEFT' in 
 right = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'RIGHT' in n and n not in FOLLOWERS]
 rollers = [i for n, i in idx.items() if '_roller_' in n]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 5.0
-kd[ankles] = 0.05   # passive ankles, as in Gazebo and in the asset
+kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
+kd[ankles] = PASSIVE_DAMPING   # passive ankle; velocity control when the track is in the air (ankle_control)
+ankle_ctrl = AnkleController(robot)
 per_track = len(left) / 2                          # driven wheels per track: 4 (rollers) or 1 (cylinder)
-kd[left + right] = 2.0 / per_track; fmax[left + right] = 40.0 / per_track
+kd[left + right] = 2.0 / per_track; fmax[left + right] = args.track_max_torque / per_track
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
 if rollers:
@@ -168,8 +177,10 @@ except OSError:
 t0 = SimulationManager.get_simulation_time()
 n_saved = 0
 log = []
-MODEL = f'roller wheels, roller friction {args.roller_friction:g} Nm' if rollers else 'cylinder wheels (mimic)'
+MODEL = (f'rollers, track motor max {args.track_max_torque:g} Nm' if rollers else 'cylinder wheels (mimic)') + \
+    (f', mu {args.mu:g}' if args.mu is not None else ', mu 0.75')
 cmd = (0.0, 0.0)
+track_speed = (0.0, 0.0)
 while True:
     t = SimulationManager.get_simulation_time() - t0
     if t > T_END:
@@ -177,6 +188,8 @@ while True:
     v, w = command(t)
     if (v, w) != cmd:
         cmd = (v, w)
+        track_speed = (v - w * args.track_width / 2, v + w * args.track_width / 2)
+        ankle_ctrl.set_speeds(*track_speed)
         vl, vr = v - w * args.track_width / 2, v + w * args.track_width / 2
         tgt = np.zeros(N, np.float32); tgt[left] = -vl / R; tgt[right] = vr / R
         robot.set_dof_velocity_targets(tgt[None])

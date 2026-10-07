@@ -117,9 +117,9 @@ for robot, (path, x, tau) in zip(robots, ROBOTS):
     wheels = [i for n, i in idx.items() if n.startswith('joint_wheel_')]
     rollers = [i for n, i in idx.items() if '_roller_' in n]
     kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-    kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 5.0
-    kd[ankles] = 0.05   # passive ankles, as in Gazebo and in the asset
-    kd[wheels] = 0.5; fmax[wheels] = 10.0
+    kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
+    kd[ankles] = 0.01   # passive ankles (asset value): parked, the tracks touch the ground
+    kd[wheels] = 0.5; fmax[wheels] = 0.375   # track motor 1.5 N m per track
     kd[rollers] = args.roller_damping
     robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
     robot.set_dof_max_efforts(fmax[None])

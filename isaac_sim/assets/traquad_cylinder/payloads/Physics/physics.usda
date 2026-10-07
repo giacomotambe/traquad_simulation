@@ -41,7 +41,7 @@ over "traquad"
                 )
                 {
                     double[] newton:inertia = [0.0001327248, 0.00010894585, 0.00009870185, 0.0000022533972500000003, 0.000010074317499999999, -0.000009427730000000002]
-                    point3f physics:centerOfMass = (0.0238777, -0.00119624, -0.00412068)
+                    point3f physics:centerOfMass = (0.0238777, 0.0132172, -0.00412068)
                     float3 physics:diagonalInertia = (0.00009077622, 0.00011410806, 0.00013548823)
                     float physics:mass = 0.195
                     quatf physics:principalAxes = (-0.58846676, 0.19690546, 0.77126324, -0.14173236)
@@ -143,7 +143,7 @@ over "traquad"
                 )
                 {
                     double[] newton:inertia = [0.0001327248, 0.00010894585, 0.00009870185, 0.0000022533972500000003, 0.000010074317499999999, -0.000009427730000000002]
-                    point3f physics:centerOfMass = (0.0238777, -0.00119624, -0.00412068)
+                    point3f physics:centerOfMass = (0.0238777, 0.0132172, -0.00412068)
                     float3 physics:diagonalInertia = (0.00009077622, 0.00011410806, 0.00013548823)
                     float physics:mass = 0.195
                     quatf physics:principalAxes = (-0.58846676, 0.19690546, 0.77126324, -0.14173236)
@@ -245,7 +245,7 @@ over "traquad"
                 )
                 {
                     double[] newton:inertia = [0.0001327248, 0.00009870185, 0.00010894585, 0.000010074317499999999, -0.0000022533972500000003, 0.000009427730000000002]
-                    point3f physics:centerOfMass = (-0.0238777, 0.00412068, -0.00119624)
+                    point3f physics:centerOfMass = (-0.0238777, 0.00412068, 0.0132172)
                     float3 physics:diagonalInertia = (0.00009077622, 0.00011410806, 0.00013548823)
                     float physics:mass = 0.195
                     quatf physics:principalAxes = (0.555342, 0.27687564, 0.6455854, 0.44514558)
@@ -347,7 +347,7 @@ over "traquad"
                 )
                 {
                     double[] newton:inertia = [0.0001327248, 0.00009870185, 0.00010894585, 0.000010074317499999999, -0.0000022533972500000003, 0.000009427730000000002]
-                    point3f physics:centerOfMass = (-0.0238777, 0.00412068, -0.00119624)
+                    point3f physics:centerOfMass = (-0.0238777, 0.00412068, 0.0132172)
                     float3 physics:diagonalInertia = (0.00009077622, 0.00011410806, 0.00013548823)
                     float physics:mass = 0.195
                     quatf physics:principalAxes = (0.555342, 0.27687564, 0.6455854, 0.44514558)
@@ -486,7 +486,7 @@ over "traquad"
         {
             float drive:angular:physics:maxForce = 10
             uniform token drive:angular:physics:type = "force"
-            float newton:damping = 0.0008726646
+            float newton:damping = 0.00017453292
             float newton:velocityLimit = 572.9578
             uniform token physics:axis = "X"
             custom rel physics:body0
@@ -497,8 +497,8 @@ over "traquad"
             point3f physics:localPos1 = (0, 0, 0)
             quatf physics:localRot0 = (0.49999815, 0.5, 0.50000185, 0.5)
             quatf physics:localRot1 = (1, 0, 0, 0)
-            float physics:lowerLimit = -45.32096
-            float physics:upperLimit = -5.213916
+            float physics:lowerLimit = -35.775486
+            float physics:upperLimit = 24.224655
             custom float urdf:limit:effort = 10
         }
 
@@ -587,7 +587,7 @@ over "traquad"
         {
             float drive:angular:physics:maxForce = 10
             uniform token drive:angular:physics:type = "force"
-            float newton:damping = 0.0008726646
+            float newton:damping = 0.00017453292
             float newton:velocityLimit = 572.9578
             uniform token physics:axis = "X"
             custom rel physics:body0
@@ -598,8 +598,8 @@ over "traquad"
             point3f physics:localPos1 = (0, 0, 0)
             quatf physics:localRot0 = (-0.49999815, 0.5, 0.50000185, -0.5)
             quatf physics:localRot1 = (1, 0, 0, 0)
-            float physics:lowerLimit = 5.213916
-            float physics:upperLimit = 45.32096
+            float physics:lowerLimit = -24.224655
+            float physics:upperLimit = 35.775486
             custom float urdf:limit:effort = 10
         }
 
@@ -688,7 +688,7 @@ over "traquad"
         {
             float drive:angular:physics:maxForce = 10
             uniform token drive:angular:physics:type = "force"
-            float newton:damping = 0.0008726646
+            float newton:damping = 0.00017453292
             float newton:velocityLimit = 572.9578
             uniform token physics:axis = "X"
             custom rel physics:body0
@@ -699,8 +699,8 @@ over "traquad"
             point3f physics:localPos1 = (0, 0, 0)
             quatf physics:localRot0 = (9.38184e-7, 0.70710546, 0.7071081, 9.381874e-7)
             quatf physics:localRot1 = (1, 0, 0, 0)
-            float physics:lowerLimit = 5.213916
-            float physics:upperLimit = 45.32096
+            float physics:lowerLimit = -24.224655
+            float physics:upperLimit = 35.775486
             custom float urdf:limit:effort = 10
         }
 
@@ -789,7 +789,7 @@ over "traquad"
         {
             float drive:angular:physics:maxForce = 10
             uniform token drive:angular:physics:type = "force"
-            float newton:damping = 0.0008726646
+            float newton:damping = 0.00017453292
             float newton:velocityLimit = 572.9578
             uniform token physics:axis = "X"
             custom rel physics:body0
@@ -800,8 +800,8 @@ over "traquad"
             point3f physics:localPos1 = (0, 0, 0)
             quatf physics:localRot0 = (0.70710546, 0, 0, 0.7071081)
             quatf physics:localRot1 = (1, 0, 0, 0)
-            float physics:lowerLimit = -45.32096
-            float physics:upperLimit = -5.213916
+            float physics:lowerLimit = -35.775486
+            float physics:upperLimit = 24.224655
             custom float urdf:limit:effort = 10
         }
 

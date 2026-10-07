@@ -28,7 +28,13 @@ from . import mdp
 ##
 # Pre-defined configs
 ##
-from isaaclab_assets.robots.traquad import TRAQUAD_CFG  # isort: skip
+from isaaclab_assets.robots.traquad import (  # isort: skip
+    ANKLE_INTEGRAL_GAIN,
+    ANKLE_MAX_TORQUE,
+    ANKLE_SPEED_GAIN,
+    ANKLE_VELOCITY_RATIO,
+    TRAQUAD_CFG,
+)
 
 # the links of the TraQuad USD are nested under Robot/Geometry
 BASE_PRIM_PATH = "{ENV_REGEX_NS}/Robot/Geometry/base_link"
@@ -83,18 +89,50 @@ class ActionsCfg:
     joint_pos = mdp.JointPositionActionCfg(
         asset_name="robot", joint_names=[".*HFE"], scale=0.5, use_default_offset=True
     )
-    # one velocity action per track
+    # one velocity action per track; in the air it also velocity-controls the ankle (sprocket coaxial with it)
     joint_vel_LF = mdp.JointVelocityActionGroupCfg(
-        asset_name="robot", joint_names=_track_wheels("LEFT_F"), scale=WHEEL_VEL_SCALE
+        asset_name="robot",
+        joint_names=_track_wheels("LEFT_F"),
+        scale=WHEEL_VEL_SCALE,
+        ankle_joint_name="body_left_F_ankle",
+        ankle_velocity_ratio=ANKLE_VELOCITY_RATIO["LEFT"],
+        track_body_expr=r"body_left_F|wheel_\d_LEFT_F.*",
+        speed_gain=ANKLE_SPEED_GAIN,
+        integral_gain=ANKLE_INTEGRAL_GAIN,
+        max_torque=ANKLE_MAX_TORQUE,
     )
     joint_vel_LH = mdp.JointVelocityActionGroupCfg(
-        asset_name="robot", joint_names=_track_wheels("LEFT_H"), scale=WHEEL_VEL_SCALE
+        asset_name="robot",
+        joint_names=_track_wheels("LEFT_H"),
+        scale=WHEEL_VEL_SCALE,
+        ankle_joint_name="body_left_H_ankle",
+        ankle_velocity_ratio=ANKLE_VELOCITY_RATIO["LEFT"],
+        track_body_expr=r"body_left_H|wheel_\d_LEFT_H.*",
+        speed_gain=ANKLE_SPEED_GAIN,
+        integral_gain=ANKLE_INTEGRAL_GAIN,
+        max_torque=ANKLE_MAX_TORQUE,
     )
     joint_vel_RF = mdp.JointVelocityActionGroupCfg(
-        asset_name="robot", joint_names=_track_wheels("RIGHT_F"), scale=WHEEL_VEL_SCALE
+        asset_name="robot",
+        joint_names=_track_wheels("RIGHT_F"),
+        scale=WHEEL_VEL_SCALE,
+        ankle_joint_name="body_right_F_ankle",
+        ankle_velocity_ratio=ANKLE_VELOCITY_RATIO["RIGHT"],
+        track_body_expr=r"body_right_F|wheel_\d_RIGHT_F.*",
+        speed_gain=ANKLE_SPEED_GAIN,
+        integral_gain=ANKLE_INTEGRAL_GAIN,
+        max_torque=ANKLE_MAX_TORQUE,
     )
     joint_vel_RH = mdp.JointVelocityActionGroupCfg(
-        asset_name="robot", joint_names=_track_wheels("RIGHT_H"), scale=WHEEL_VEL_SCALE
+        asset_name="robot",
+        joint_names=_track_wheels("RIGHT_H"),
+        scale=WHEEL_VEL_SCALE,
+        ankle_joint_name="body_right_H_ankle",
+        ankle_velocity_ratio=ANKLE_VELOCITY_RATIO["RIGHT"],
+        track_body_expr=r"body_right_H|wheel_\d_RIGHT_H.*",
+        speed_gain=ANKLE_SPEED_GAIN,
+        integral_gain=ANKLE_INTEGRAL_GAIN,
+        max_torque=ANKLE_MAX_TORQUE,
     )
 
 
@@ -152,13 +190,14 @@ class EventsCfg:
     """Configuration for events."""
 
     # startup
-    # the terrain: one wheel-ground friction per robot (slippery floor to rubber on asphalt), dynamic <= static.
+    # the terrain: one wheel-ground friction per robot, dynamic <= static. Up to 0.8: above about 0.85 the traction
+    # tips the tracks onto their end stops in turns (pivot above the belt), see isaac_sim/README.md.
     # With the roller dry friction of the asset (0.06 N m, fixed: a property of the robot) the rollers stay locked
     # when parked, so the lateral grip of the robot follows this friction (slides at tan(slope) > mu)
     ground_friction = EventTerm(
         func=mdp.randomize_ground_friction,
         mode="startup",
-        params={"static_friction_range": (0.3, 1.0), "dynamic_ratio_range": (0.8, 1.0), "num_buckets": 256},
+        params={"static_friction_range": (0.3, 0.8), "dynamic_ratio_range": (0.8, 1.0), "num_buckets": 256},
     )
 
     add_base_mass = EventTerm(
@@ -240,16 +279,17 @@ class RewardsCfg:
     joint_deviation_l1 = RewTerm(
         func=mdp.joint_deviation_l1, weight=-0.1, params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*HFE"])}
     )
-    # the ankles are passive: the policy acts on them only indirectly
+    # off: the ankles are passive on the ground and follow the track command in the air, the policy acts on them only
+    # indirectly; in the first trainings this was the largest penalty and mostly noise
     joint_pos_limits = RewTerm(
         func=mdp.joint_pos_limits,
-        weight=-5.0,
+        weight=0.0,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=["body_.*_ankle"])},
     )
     # stuck (forward speed commanded, base not moving): reward lifting a whole track, e.g. onto a step
     track_air_time_stuck = RewTerm(
         func=mdp.track_air_time_stuck_recovery,
-        weight=0.25,
+        weight=1.0,
         params={"sensor_name": "contact_forces", "threshold": 0.05},
     )
     # -- the two middle wheels (wheel 2) of the front and hind track of a side should turn together

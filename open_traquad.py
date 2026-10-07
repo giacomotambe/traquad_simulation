@@ -52,10 +52,13 @@ parser.add_argument(
 )
 parser.add_argument("--ground_friction", type=float, default=1.0, help="Friction of the ground plane.")
 parser.add_argument(
-    "--track_max_torque", type=float, default=40.0, help="Torque limit of a track motor [Nm at r = 15 mm]."
+    "--track_max_torque",
+    type=float,
+    default=1.5,
+    help="Torque limit of a track motor [Nm at r = 15 mm] (1.5 Nm = 100 N of belt force).",
 )
 parser.add_argument(
-    "--ankle_stiffness", type=float, default=0.0, help="Ankle PD stiffness [Nm/rad] (0: passive ankles, as in Gazebo)."
+    "--ankle_stiffness", type=float, default=0.0, help="Ankle PD stiffness [Nm/rad] (0: ankles coupled to the track motor, as the asset and the RL tasks)."
 )
 add_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -64,7 +67,7 @@ import torch
 from isaaclab_physx.sim.schemas import PhysxArticulationCfg, PhysxRigidBodyCfg
 
 import isaaclab.sim as sim_utils
-from isaaclab.actuators import ImplicitActuatorCfg
+from isaaclab.actuators import IdealPDActuatorCfg, ImplicitActuatorCfg
 from isaaclab.assets import Articulation, ArticulationCfg
 from isaaclab.utils.math import quat_apply_inverse
 
@@ -93,6 +96,16 @@ WHEEL_RADIUS = 0.015  # [m]
 TRACK_WIDTH = 0.395
 # Skid-steer slip compensation: effective width > geometric width (tune if turning is too slow/fast)
 TRACK_WIDTH_FACTOR = 1.0
+# Ankle (same model as isaaclab_assets/robots/traquad.py): the drive sprocket is coaxial with the ankle. Passive on the
+# ground; with the track in the air a PI velocity controller turns the frame with the sprocket (v / SPROCKET_RADIUS)
+# until an end stop. Contact is taken from the height of the wheels above the flat ground of this script.
+SPROCKET_RADIUS = 0.015  # [m], placeholder until measured
+ANKLE_PASSIVE_DAMPING = 0.01  # [N m s/rad]
+ANKLE_SPEED_GAIN = 0.2  # [N m s/rad]
+ANKLE_INTEGRAL_GAIN = 2.0  # [N m/rad]
+ANKLE_MAX_TORQUE = 0.05  # [N m]
+CONTACT_MARGIN = 0.004  # [m], wheel centre below WHEEL_RADIUS + this: the track touches the ground
+AIR_DELAY = 0.05  # [s], time without contact before the ankle controller takes over
 
 # Wheel joint axes point along -y (left) and +y (right) in the world frame,
 # so a positive forward speed needs a negative spin on the left and positive on the right.
@@ -153,7 +166,8 @@ def make_robot_cfg(prim_path, position):
                 "LH_HFE": -1.47,
                 "RF_HFE": -1.47,
                 "RH_HFE": 1.47,
-                # ankle limits: front in [0.091, 0.791], hind in [-0.791, -0.091]
+                # ankle end stops (relative to the upper leg): +-30 deg around the flat pose, front in [-0.423, 0.624],
+                # hind in [-0.624, 0.423]
                 "body_.*_F_ankle": 0.10,
                 "body_.*_H_ankle": -0.10,
                 "joint_wheel_.*": 0.0,
@@ -182,25 +196,32 @@ def make_actuators_cfg():
     return {
         "legs": ImplicitActuatorCfg(
             joint_names_expr=[".*HFE"],
-            joint_effort_limit=5.0,
+            # hip motor limit raised from 5 N m (Gazebo value): the hips saturated in the first trainings
+            joint_effort_limit=10.0,
             joint_velocity_limit=5.0,
             # same PD as Gazebo (pd_controller) and the Isaac Sim tests
             stiffness=100.0,
             damping=10.0,
         ),
-        # ankles: passive by default, they keep the damping of the USD (0.05 Nm s/rad, as in Gazebo)
-        **(
-            {
-                "ankles": ImplicitActuatorCfg(
-                    joint_names_expr=["body_.*_ankle"],
-                    joint_effort_limit=10.0,
-                    joint_velocity_limit=10.0,
-                    stiffness=args_cli.ankle_stiffness,
-                    damping=0.2,
-                )
-            }
+        # ankles: coupled to the track motor by default (velocity drive towards the sprocket speed, as the asset and
+        # the Isaac Lab tasks); --ankle_stiffness > 0 holds them with a PD instead
+        "ankles": (
+            ImplicitActuatorCfg(
+                joint_names_expr=["body_.*_ankle"],
+                joint_effort_limit=10.0,
+                joint_velocity_limit=10.0,
+                stiffness=args_cli.ankle_stiffness,
+                damping=0.2,
+            )
             if args_cli.ankle_stiffness > 0.0
-            else {}
+            else IdealPDActuatorCfg(
+                joint_names_expr=["body_.*_ankle"],
+                stiffness=0.0,
+                damping=0.0,
+                actuator_effort_limit=ANKLE_MAX_TORQUE,
+                joint_velocity_limit=100.0,
+                viscous_friction=ANKLE_PASSIVE_DAMPING,
+            )
         ),
         "wheels": make_wheels_actuator_cfg(),
     }
@@ -331,8 +352,38 @@ def twist_to_wheel_velocities(robot, left_ids, right_ids, lin_vel, ang_vel):
     joint_vel = torch.zeros_like(robot.data.joint_vel.torch)
     joint_vel[:, left_ids] = LEFT_SIGN * v_left / WHEEL_RADIUS
     joint_vel[:, right_ids] = RIGHT_SIGN * v_right / WHEEL_RADIUS
-
     return joint_vel
+
+
+class AnkleController:
+    """PI velocity control of the ankles while the tracks are in the air (effort commands, run every physics step)."""
+
+    def __init__(self, robot, dt):
+        self.robot, self.dt = robot, dt
+        self.tracks = []
+        for side, track in (("left", "LEFT"), ("right", "RIGHT")):
+            for fh in ("F", "H"):
+                ankle_id = robot.find_joints(f"body_{side}_{fh}_ankle")[0][0]
+                wheel_bodies = robot.find_bodies(f"wheel_[1-4]_{track}_{fh}")[0]
+                self.tracks.append((ankle_id, wheel_bodies, side == "left"))
+        self.ankle_ids = [a for a, _, _ in self.tracks]
+        self.integral = torch.zeros(robot.num_instances, len(self.tracks), device=robot.device)
+        self.air_time = torch.zeros_like(self.integral)
+
+    def efforts(self, v_left, v_right):
+        z = self.robot.data.body_pos_w.torch[:, :, 2]
+        off_ground = torch.stack([z[:, w].min(dim=1).values > WHEEL_RADIUS + CONTACT_MARGIN for _, w, _ in self.tracks], 1)
+        self.air_time = torch.where(off_ground, self.air_time + self.dt, 0.0)
+        in_air = self.air_time > AIR_DELAY   # debounce
+        # ankle axes point along +y on both sides: in the air the sprocket (and the frame) turns with the wheels
+        target = torch.tensor([(v_left if left else v_right) / SPROCKET_RADIUS for _, _, left in self.tracks],
+                              device=z.device)
+        err = target - self.robot.data.joint_vel.torch[:, self.ankle_ids]
+        tau_free = ANKLE_SPEED_GAIN * err + ANKLE_INTEGRAL_GAIN * self.integral
+        grow = (tau_free.abs() < ANKLE_MAX_TORQUE) | (torch.sign(err) != torch.sign(tau_free))   # anti-windup
+        self.integral = torch.where(in_air, self.integral + torch.where(grow, err * self.dt, 0.0), 0.0)
+        tau = (ANKLE_SPEED_GAIN * err + ANKLE_INTEGRAL_GAIN * self.integral).clamp(-ANKLE_MAX_TORQUE, ANKLE_MAX_TORQUE)
+        return torch.where(in_air, tau, 0.0)
 
 
 def get_command(t):
@@ -386,6 +437,7 @@ def run(sim_cfg):
     robot.actuators.target_command.set_position_index(value=pose_target)
 
     leg_ids, _ = robot.find_joints([".*HFE", "body_.*_ankle"])
+    ankle_ctrl = AnkleController(robot, sim.get_physics_dt()) if args_cli.ankle_stiffness <= 0.0 else None
 
     if args_cli.rigid_legs:
         print("[INFO] Rigid legs: stiff HFE and ankle drives")
@@ -402,6 +454,10 @@ def run(sim_cfg):
         wheel_vel = twist_to_wheel_velocities(robot, left_ids, right_ids, lin_vel, ang_vel)
         robot.actuators.target_command.set_position_index(value=pose_target)
         robot.actuators.target_command.set_velocity_index(value=wheel_vel)
+        if ankle_ctrl is not None:
+            width = TRACK_WIDTH * TRACK_WIDTH_FACTOR
+            tau = ankle_ctrl.efforts(lin_vel - ang_vel * width / 2.0, lin_vel + ang_vel * width / 2.0)
+            robot.actuators.target_command.set_effort_index(value=tau, joint_ids=ankle_ctrl.ankle_ids)
         robot.write_data_to_sim()
 
         sim.step()

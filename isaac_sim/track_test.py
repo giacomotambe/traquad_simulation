@@ -13,6 +13,7 @@ commanded. Wheel gain and torque limit are read from the USD (written by finaliz
 usage: ./isaac.sh track_test.py --usd <robot.usda> --out <csv> [--damping d] [--mu 0.5] [--mu_dyn 0.45] [--info]
 """
 import argparse
+from ankle_control import PASSIVE_DAMPING, AnkleController
 import csv
 import math
 
@@ -32,6 +33,12 @@ parser.add_argument('--friction_corr', type=float, default=None,
                     help='PhysX friction correlation distance [m] (default 0.025): contacts closer than this share '
                          'one friction anchor')
 parser.add_argument('--info', action='store_true', help='only check settle state and forward motion')
+parser.add_argument('--hfe', type=float, default=1.47,
+                    help='HFE stance [rad] (1.47: RL tasks and open_traquad.py; 1.13: earlier tests); ankles start flat')
+parser.add_argument('--no_coupling', action='store_true', help='ankles always passive (no velocity control in the air)')
+parser.add_argument('--ankle_range', type=float, default=None, help='ankle end stops +- this around the flat pose of the '
+                    'default stance (0.1008) [rad] (default: from the USD, +-0.5236)')
+parser.add_argument('--ankle_kd', type=float, default=None, help='passive ankle damping [N m s/rad] (default: ankle_control)')
 args, _ = parser.parse_known_args()
 
 from isaacsim import SimulationApp  # noqa: E402
@@ -51,7 +58,8 @@ SimulationManager.switch_physics_engine('physx')
 print('ENGINE', SimulationManager.get_active_physics_engine(), flush=True)
 
 R, B = 0.015, 0.395
-HFE_TARGET = {'LF_HFE': 1.13, 'LH_HFE': -1.13, 'RF_HFE': -1.13, 'RH_HFE': 1.13}
+HFE_TARGET = {'LF_HFE': args.hfe, 'LH_HFE': -args.hfe, 'RF_HFE': -args.hfe, 'RH_HFE': args.hfe}
+ANKLE_FLAT = math.pi / 2 - args.hfe   # |HFE| + |ankle| = pi/2: track flat on the ground
 PHASES = [('settle', 0.0, 0.0, 3.0), ('yaw', 0.0, 0.5, 8.0), ('stop1', 0.0, 0.0, 2.0),
           ('curve', 0.2, 0.5, 10.0), ('stop2', 0.0, 0.0, 2.0), ('straight', 0.2, 0.0, 5.0)]
 MU_DYN = args.mu if args.mu_dyn is None else args.mu_dyn
@@ -136,15 +144,28 @@ wheels_r = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'RIGHT
 WHEEL_KD = USD_WHEEL['kd'] if args.wheel_kd is None else args.wheel_kd
 WHEEL_MAX = USD_WHEEL['max'] if args.wheel_max is None else args.wheel_max
 ankles = [i for n, i in idx.items() if n.endswith('_ankle')]
+ANK_NAMES = [n for n in idx if n.endswith('_ankle')]
+# driven wheels of each track, in the order of ANK_NAMES (body_left_H -> LEFT_H, ...)
+TRACK_WHEELS = [[i for m, i in idx.items() if m.startswith('joint_wheel_') and m.endswith(n.split('_')[1].upper() + '_'
+                 + n.split('_')[2]) and m not in FOLLOWERS] for n in ANK_NAMES]
+ANK_FLAT = np.array([(math.pi / 2 - args.hfe) * (1 if '_F_' in n else -1) for n in ANK_NAMES])
 rollers = [i for n, i in idx.items() if '_roller_' in n]
 print(f'DOFs {N}: hfe {len(hfe)} driven wheels {len(wheels_l)}+{len(wheels_r)} mimic wheels {len(FOLLOWERS)} '
       f'ankles {len(ankles)} rollers {len(rollers)} | wheel kd {WHEEL_KD:g} max {WHEEL_MAX:g} Nm | '
       f'mu {args.mu}/{MU_DYN} dt {args.dt}', flush=True)
 
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 5.0
+kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
 kd[wheels_l + wheels_r] = WHEEL_KD; fmax[wheels_l + wheels_r] = WHEEL_MAX
-kd[ankles] = 0.05
+kd[ankles] = PASSIVE_DAMPING if args.ankle_kd is None else args.ankle_kd   # passive ankle (velocity control in the air below)
+ankle_ctrl = AnkleController(robot, enabled=not args.no_coupling)
+if args.ankle_range is not None:
+    lo_, hi_ = (x.numpy() for x in robot.get_dof_limits())
+    for n_, i_ in idx.items():
+        if n_.endswith('_ankle'):
+            c_ = 0.1008 if '_F_' in n_ else -0.1008
+            lo_[0, i_], hi_[0, i_] = c_ - args.ankle_range, c_ + args.ankle_range
+    robot.set_dof_limits(lo_, hi_)
 kd[rollers] = args.damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
 if rollers and args.roller_friction is not None:
@@ -158,9 +179,9 @@ robot.set_dof_position_targets(pos_t[None])
 # initial state as it ends up in Gazebo: legs at their target, tracks flat (ankle at the flat pose)
 q0 = pos_t.copy()
 for n in ('body_left_F_ankle', 'body_right_F_ankle'):
-    q0[idx[n]] = 0.441
+    q0[idx[n]] = ANKLE_FLAT
 for n in ('body_left_H_ankle', 'body_right_H_ankle'):
-    q0[idx[n]] = -0.441
+    q0[idx[n]] = -ANKLE_FLAT
 robot.set_dof_positions(q0[None])
 
 
@@ -174,10 +195,17 @@ def state():
     return p, yaw, c * lin[0] + s * lin[1], -s * lin[0] + c * lin[1], ang[2]
 
 
+track_speed = [0.0, 0.0]   # belt speed of the left and right tracks, for the ankle controller
+wheel_tgt = np.zeros(N, np.float32)   # wheel velocity targets (for the torque estimate)
+
+
 def send(v, w):
     vel = np.zeros(N, np.float32)
     vel[wheels_l] = -(v - w * B / 2) / R        # URDF convention: left wheel axis = -y
     vel[wheels_r] = (v + w * B / 2) / R
+    track_speed[:] = [v - w * B / 2, v + w * B / 2]
+    ankle_ctrl.set_speeds(*track_speed)
+    wheel_tgt[:] = vel
     robot.set_dof_velocity_targets(vel[None])
 
 
@@ -216,7 +244,9 @@ driven = wheels_l + wheels_r
 rows, t, log_every = [], 0.0, max(1, int(round(0.05 / args.dt)))
 torque = {}        # phase -> list of |torque| / limit of the driven wheels, every step
 vz_straight = []   # base vertical velocity in the straight phase, every step
-stab = {'vz': [], 'wxy': [], 'roller': [], 'ankle': [], 'nan': False}
+stab = {'vz': [], 'wxy': [], 'roller': [], 'ankle': [], 'nan': False, 'hfe_dev': [], 'at_stop': [], 'tau_ankle': [],
+        'tau_hfe': []}
+lo_lim, hi_lim = (x.numpy()[0] for x in robot.get_dof_limits())
 for name, v, w, dur in PHASES:
     send(v, w)
     for k in range(int(round(dur / args.dt))):
@@ -233,6 +263,18 @@ for name, v, w, dur in PHASES:
             stab['vz'].append(lin[2]); stab['wxy'].append(np.abs(ang[:2]).max())
             stab['roller'].append(np.abs(dv[rollers]).max() if rollers else 0.0)
             stab['ankle'].append(np.abs(dv[ankles]).max())
+            qq = robot.get_dof_positions().numpy()[0]
+            stab['hfe_dev'].append(np.abs(qq[hfe] - pos_t[hfe]).max())
+            stab['at_stop'].append(np.any(np.minimum(qq[ankles] - lo_lim[ankles], hi_lim[ankles] - qq[ankles]) < 0.02))
+            # drive torques from the drive laws (the projected joint forces of the tensor API read zero)
+            t_ank = getattr(ankle_ctrl, 'last_tau', np.zeros(1))   # controller torque (passive damping excluded)
+            t_hfe = np.clip(kp[hfe] * (pos_t[hfe] - qq[hfe]) - kd[hfe] * dv[hfe], -fmax[hfe], fmax[hfe])
+            stab['tau_ankle'].append(np.abs(t_ank).max()); stab['tau_hfe'].append(np.abs(t_hfe).max())
+            stab.setdefault('phase', {}).setdefault(name, []).append(
+                np.concatenate([qq[ankles] - ANK_FLAT,
+                                np.abs(t_hfe) >= fmax[hfe] - 1e-3,
+                                [np.clip(kd[w_] * (wheel_tgt[w_] - dv[w_]), -fmax[w_], fmax[w_]).sum() for w_ in TRACK_WHEELS],
+                                np.abs(t_hfe)]))
         if k % log_every == 0:
             p, yaw, vx, vy, wz = state()
             rows.append([round(t, 3), name, v, w, p[0], p[1], p[2], yaw, vx, vy, wz])
@@ -253,6 +295,18 @@ az = np.diff(np.array(vz_straight)) / args.dt
 print(f'RESULT straight_speed {a[ms, 0].size and np.hypot(np.diff(a[ms, 1]), np.diff(a[ms, 2])).sum() / (a[ms, 0][-1] - a[ms, 0][0]):.3f} m/s '
       f'(cmd 0.2) | jitter std(base z acc) {az.std():.3f} m/s^2', flush=True)
 az_all = np.abs(np.diff(np.array(stab['vz'])) / args.dt)
+print(f"RESULT legs: max |HFE - target| {math.degrees(max(stab['hfe_dev'])):.2f} deg | time with an ankle at a stop "
+      f"{100 * np.mean(stab['at_stop']):.0f}% | max |ankle torque| {max(stab['tau_ankle']):.3f} N m | max |HFE torque| "
+      f"{max(stab['tau_hfe']):.2f} N m", flush=True)
+for ph, arr in stab['phase'].items():
+    a_ = np.array(arr)
+    print(f"PHASE {ph:8s} ankle from flat mean [deg] ({' '.join(n.replace('body_', '').replace('_ankle', '') for n in ANK_NAMES)}) "
+          + ' '.join(f'{math.degrees(x):+5.1f}' for x in a_[:, :4].mean(0))
+          + ' | min ' + ' '.join(f'{math.degrees(x):+5.1f}' for x in a_[:, :4].min(0))
+          + ' | max ' + ' '.join(f'{math.degrees(x):+5.1f}' for x in a_[:, :4].max(0))
+          + f" | HFE saturated {100 * a_[:, 4:8].any(1).mean():.0f}% of the time"
+          + ' | track motor torque mean / max [N m] ' + ' '.join(f'{np.abs(a_[:, 8 + j]).mean():.2f}/{np.abs(a_[:, 8 + j]).max():.1f}' for j in range(4))
+          + f' | HFE torque mean {a_[:, 12:16].mean():.2f} N m', flush=True)
 print(f"RESULT stability: p99 |base z acc| {np.percentile(az_all, 99):.2f} m/s^2 | max |roll/pitch rate| "
       f"{max(stab['wxy']):.3f} rad/s | max |roller vel| {max(stab['roller']):.0f} rad/s | max |ankle vel| "
       f"{max(stab['ankle']):.2f} rad/s | NaN {stab['nan']}", flush=True)
