@@ -182,6 +182,12 @@ exceeds tau / r_roller, so the robot holds lateral forces up to about 12 * tau /
   about mu*m*g (30 / 40 / 50 / 60 N). With tau 0.02 the rollers give way at about 30 N or 20-25 deg whatever mu is.
   The rollers stay locked while tau > mu*m*g*r_roller/N_contacts = 0.052*mu (7.8 kg, 12 rollers): tau is a property of
   the robot, the grip comes from mu.
+- Current model, 8.0 kg, 5 ms (2026-10-20). Flat (`track_test.py`): yaw 63% in place / 64% in the turn at mu 0.75
+  (54/53% mu 0.6, 67/67% mu 1.0; 1 ms 61/56%), straight 0.196 m/s of 0.2, hips at most 5.9 Nm, no ankle on a stop,
+  track torque about 11% of the limit while turning: the limit is the speed loop (Kd 0.9, Kp 0). Slopes (`--slope`):
+  35 deg climbed at 0.08 m/s (mu 0.75) and 0.16 m/s (mu 1.0); stopped, it slides back 0.4-0.6 m in 1.5 s, then creeps
+  1-2 cm/s; 30 deg at mu 0.6 is marginal (0.06 m/s, -0.54 m). Parked at mu 0.75: holds 40 N side push (creeps at 50 N,
+  slides at 60 N) and 30 deg side slope (slides at 35 deg).
 - The scripts of this folder use the current model: HFE PD 60 / 0.6, real track velocity gain, passive ankles (damping 0.01), real mass 8.0 kg (weighed 2026-10-20);
   `--roller_friction` is always applied (default 0.06, the asset value; 0 removes it). `video_replica.py` also
   handles the cylinder model (only the driven wheels are commanded) and logs velocities with `--csv`.
