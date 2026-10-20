@@ -2,10 +2,10 @@
 tilt (pendulum test of the real robot) and/or driven by a sequence of track speed commands.
 
 The base is fixed in the air (articulation root moved to a fixed joint to the world), the HFE are held by stiff
-drives at the stance. Ankle = track motor coupling as in the asset and in Isaac Lab: velocity drive towards the
-sprocket speed v / SPROCKET_RADIUS when the track is in the air (ankle_control.py: velocity controller, gain 0.01 N m s/rad,
-max 0.05 N m), plus the passive damping of the pivot --ankle_damping (0.01 N m s/rad). With no command the controller
-only damps: the hanging track swings back to its hanging pose. All four ankles
+drives at the stance. Ankle model as in the asset and in Isaac Lab (ankle_control.py): with the track in the air a PI
+velocity controller turns the frame at the sprocket speed v / SPROCKET_RADIUS (Kp 0.2 N m s/rad, Ki 2 N m/rad, max
+0.05 N m), so a zero command holds the angle; plus the passive damping of the pivot --ankle_damping (0.01 N m s/rad).
+With --no_control (motor unpowered) the hanging track swings back to its hanging pose. All four ankles
 start --offset rad away from the flat pose; --sequence "dur:v,dur:v,..." gives the track speed v [m/s] (same on the
 four tracks, forward positive) for each duration [s]. Frames from a side camera on the front-left track are saved
 as PNG (named by simulated time) with command and ankle angle on them; --csv logs the four ankle angles.
@@ -117,8 +117,8 @@ wheels = [i for n, i in idx.items() if n.startswith('joint_wheel_')]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
 kp[hfe] = 1e4; kd[hfe] = 100.0                      # hips locked
 kd[ankles] = PASSIVE_DAMPING if args.ankle_damping is None else args.ankle_damping   # passive ankles
-ankle_ctrl = AnkleController(robot, enabled=not args.no_control, wheel_kd=0.5, wheel_max=0.375)
-kd[wheels] = 0.5; fmax[wheels] = 0.375              # track motor: 1.5 N m per track
+ankle_ctrl = AnkleController(robot, enabled=not args.no_control, wheel_kd=0.9 * (0.015 / 0.028) ** 2 / 4, wheel_max=0.375)
+kd[wheels] = 0.9 * (0.015 / 0.028) ** 2 / 4; fmax[wheels] = 0.375   # track motor: 1.5 N m per track, real velocity gain
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
 robot.set_dof_max_efforts(fmax[None])
 q0 = np.zeros(N, np.float32)

@@ -3,7 +3,8 @@ in Isaac Sim / Isaac Lab (Isaac Lab actuators still override the joints they con
 
 - Physics variant set to 'physx' (the importer leaves it unselected: no physics otherwise)
 - articulation self-collisions off
-- HFE: PD drive Kp 100 Nm/rad, Kd 10 Nm s/rad, max 10 Nm (to be checked against the real hip motor)
+- HFE: PD drive Kp 60 Nm/rad, Kd 0.6 Nm s/rad (real robot, mulsbc_ws traquad8_dji.xacro), max 10 Nm (to be checked
+  against the real hip motor)
 - ankles: passive damping 0.01 Nm s/rad. The controllers (Isaac Lab action, isaac_sim/ankle_control.py) add a
   velocity control of the ankle when the track is in the air: the frame turns with the drive sprocket
 - driven wheels: velocity drive (stiffness 0), armature --wheel_armature. The motor of a track is described at the
@@ -12,6 +13,11 @@ in Isaac Sim / Isaac Lab (Isaac Lab actuators still override the joints they con
 - contact offset --contact_offset on the colliders of wheels, rollers and track bodies (rest offset 0)
 - roller model (track_model:=rollers):
   - rollers: passive, damping --roller_damping, dry (Coulomb) friction --roller_friction [Nm]
+- sphere model (track_model:=spheres, detected from the passive spheres '*_roller_ball'): all 4 driven spheres of a
+  track are driven as the wheels of the roller model; the passive spheres get the roller settings (damping
+  --roller_damping, dry friction --roller_friction)
+- gimbal model (track_model:=gimbal, passive joints '*_roller_gimbal_joint'): as the sphere model; the controller
+  must reset the passive joint angles (isaac_sim/gimbal_reset.py)
 - cylinder model (track_model:=cylinder, detected from the mimic joints):
   - wheel 2 of each track is driven; wheels 1, 3, 4 follow it through the mimic joints written by the importer
     (NewtonMimicAPI, read by PhysX too): no drive, and a finite (huge) limit on leader and followers, which PhysX
@@ -26,12 +32,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--usd', required=True)
 parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--roller_friction', type=float, default=0.06)
-# track motor: 40 Nm per track (10 Nm per wheel, as the model that matched the real robot's rotation; with 0.6 Nm per
-# track the robot turned at 16% of the command). A velocity gain much lower than 2 Nm s/rad leaves the wheels behind
-# their target under load
+# track motor: 1.5 Nm per track. Velocity gain of the real robot (moteus Kd 0.9 N m s/rad at the sprocket, Kp 0): about
+# 8 times lower than the 2 Nm s/rad used before, it leaves the tracks behind their target under load (the simulated
+# rotation in place drops from about 95% to 60% of the command)
 parser.add_argument('--track_max_torque', type=float, default=1.5,
                     help='torque limit of a track [Nm at r 15 mm] (1.5 Nm = 100 N of belt force)')
-parser.add_argument('--track_damping', type=float, default=2.0, help='velocity gain of a track [Nm s/rad]')
+parser.add_argument('--track_damping', type=float, default=0.9 * (0.015 / 0.028) ** 2,
+                    help='velocity gain of a track [Nm s/rad]: real Kd 0.9 at the 28 mm sprocket referred to the 15 mm wheels')
 parser.add_argument('--wheel_armature', type=float, default=0.001, help='armature of each driven wheel [kg m^2]')
 parser.add_argument('--contact_offset', type=float, default=0.003, help='wheels, rollers and track bodies [m]')
 args, _ = parser.parse_known_args()
@@ -75,6 +82,10 @@ for prim in stage.Traverse():
         mimic_of[prim.GetPath()] = rel.GetTargets()[0]
 leaders = set(mimic_of.values())
 model = 'cylinder' if mimic_of else 'rollers'
+if any(p.GetName().endswith('_roller_ball_joint') for p in stage.Traverse()):
+    model = 'spheres'
+if any(p.GetName().endswith('_roller_gimbal_joint') for p in stage.Traverse()):
+    model = 'gimbal'
 driven_per_track = 1 if model == 'cylinder' else 4
 wheel_max = args.track_max_torque / driven_per_track
 wheel_kd = args.track_damping / driven_per_track
@@ -100,7 +111,7 @@ for prim in stage.Traverse():
     if not prim.IsA(UsdPhysics.RevoluteJoint):
         continue
     if name.endswith('_HFE'):
-        drive(prim, 100.0, 10.0, 10.0); counts['hfe'] += 1
+        drive(prim, 60.0, 0.6, 10.0); counts['hfe'] += 1
     elif path in mimic_of:
         # follower wheel: moved by the mimic constraint only
         prim.RemoveAPI(UsdPhysics.DriveAPI, 'angular')
@@ -125,5 +136,20 @@ for prim in stage.Traverse():
             a.Set(args.roller_friction)
         counts['roller'] += 1
 stage.GetRootLayer().Save()
+
+# mesh colliders (barrel rollers) live in the instance prototypes of payloads/instances.usda, which the traversal above
+# does not reach: contact offset as the other wheel colliders, convex hull limited to 64 vertices (PhysX GPU limit)
+import os  # noqa: E402
+inst_path = os.path.join(os.path.dirname(os.path.abspath(args.usd)), 'payloads', 'instances.usda')
+if os.path.exists(inst_path):
+    inst = Usd.Stage.Open(inst_path)
+    for prim in inst.Traverse():
+        if prim.HasAPI(UsdPhysics.MeshCollisionAPI) and 'barrel_roller' in prim.GetName():
+            col = PhysxSchema.PhysxCollisionAPI.Apply(prim)
+            col.CreateContactOffsetAttr().Set(args.contact_offset)
+            col.CreateRestOffsetAttr().Set(0.0)
+            PhysxSchema.PhysxConvexHullCollisionAPI.Apply(prim).CreateHullVertexLimitAttr().Set(64)
+            counts['contact_offset'] += 1
+    inst.GetRootLayer().Save()
 print('finalized', model, counts, f'wheel kd {wheel_kd:g} max {wheel_max:g} Nm', flush=True)
 app.close()

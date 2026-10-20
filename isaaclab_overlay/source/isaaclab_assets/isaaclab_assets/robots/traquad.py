@@ -7,7 +7,7 @@
 
 The following configuration parameters are available:
 
-* :obj:`TRAQUAD_CFG`: TraQuad with roller wheels and real masses (7.8 kg)
+* :obj:`TRAQUAD_CFG`: TraQuad with roller wheels and real masses (8.0 kg)
 * :obj:`TRAQUAD_CYLINDER_CFG`: TraQuad with plain cylinder wheels: wheel 2 of each track is driven, wheels 1, 3, 4
   follow it through mimic joints
 
@@ -60,9 +60,10 @@ TRAQUAD_CYLINDER_USD_PATH = os.path.join(_REPO_DIR, "isaac_sim", "assets", "traq
 # plus a passive viscous damping ANKLE_PASSIVE_DAMPING, always (physics solver).
 WHEEL_RADIUS = 0.015
 """Radius of the simulated track wheels [m]."""
-SPROCKET_RADIUS = 0.025
-"""Radius of the drive sprocket on the ankle axis [m]. Placeholder until measured on the robot: the smallest value with
-which the model climbs a 35 deg slope at mu 0.75 without tipping its tracks (15 mm tipped them)."""
+SPROCKET_RADIUS = 0.028
+"""Radius of the drive sprocket on the ankle axis [m]: belt speed per rad/s of the track joint, ``wheel_rad`` of the
+differential IK of the real robot (mulsbc_ws traquad8_dji.yaml). 25 mm was the smallest value that climbs 35 deg at
+mu 0.75 without tipping the tracks."""
 ANKLE_PASSIVE_DAMPING = 0.01
 """Passive viscous damping of the ankle pivot [N m s/rad] (same value as the USD ankle drive)."""
 ANKLE_SPEED_GAIN = 0.2
@@ -124,20 +125,21 @@ TRAQUAD_CFG = ArticulationCfg(
             joint_names_expr=[".*HFE"],
             # hip motor limit raised from 5 N m (Gazebo value): the hips saturated in the first trainings
             joint_effort_limit=10.0,
-            joint_velocity_limit=5.0,
-            # same PD as Gazebo and the Isaac Sim tests
-            stiffness=100.0,
-            damping=10.0,
+            # real robot (mulsbc_ws traquad8_dji.xacro, joint units): moteus max_velocity 10 rad/s, Kp 60, Kd 0.6
+            joint_velocity_limit=10.0,
+            stiffness=60.0,
+            damping=0.6,
         ),
         # velocity control: zero stiffness, the damping is the velocity gain. Track motor (same as
-        # isaac_sim/finalize_usd.py): 1.5 Nm and 2 Nm s/rad per track at r = 15 mm (100 N of belt force), split over
-        # its 4 wheels. More torque made the tracks tip onto their end stops in turns (traction below the ankle)
+        # isaac_sim/finalize_usd.py): 1.5 Nm per track at r = 15 mm (100 N of belt force), split over its 4 wheels.
+        # Velocity gain of the real track joint, Kd 0.9 N m s/rad at the sprocket (moteus, Kp 0), referred to the
+        # wheels: 0.9 * (WHEEL_RADIUS / SPROCKET_RADIUS)^2 / 4 per wheel (the same belt force per m/s of speed error)
         "wheels": ImplicitActuatorCfg(
             joint_names_expr=["joint_wheel_.*"],
             joint_effort_limit=0.375,
             joint_velocity_limit=200.0,
             stiffness=0.0,
-            damping=0.5,
+            damping=0.9 * (WHEEL_RADIUS / SPROCKET_RADIUS) ** 2 / 4,
             # the wheels are tiny (r = 1.5 cm): armature improves the solver conditioning
             armature=0.001,
         ),
@@ -175,7 +177,7 @@ TRAQUAD_CYLINDER_CFG = replace(
             joint_effort_limit=1.5,
             joint_velocity_limit=200.0,
             stiffness=0.0,
-            damping=2.0,
+            damping=0.9 * (WHEEL_RADIUS / SPROCKET_RADIUS) ** 2,
             armature=0.001,
         ),
     },

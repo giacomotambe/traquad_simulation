@@ -14,6 +14,7 @@ usage: ./isaac.sh track_test.py --usd <robot.usda> --out <csv> [--damping d] [--
 """
 import argparse
 from ankle_control import PASSIVE_DAMPING, AnkleController
+from gimbal_reset import THRESHOLD as GIMBAL_THRESHOLD, GimbalReset
 import csv
 import math
 
@@ -35,6 +36,8 @@ parser.add_argument('--friction_corr', type=float, default=None,
 parser.add_argument('--info', action='store_true', help='only check settle state and forward motion')
 parser.add_argument('--hfe', type=float, default=1.47,
                     help='HFE stance [rad] (1.47: RL tasks and open_traquad.py; 1.13: earlier tests); ankles start flat')
+parser.add_argument('--hfe_kp', type=float, default=60.0, help='HFE PD stiffness [N m/rad] (real robot)')
+parser.add_argument('--hfe_kd', type=float, default=0.6, help='HFE PD damping [N m s/rad] (real robot)')
 parser.add_argument('--slope', type=float, default=None,
                     help='climb test instead of the maneuver: after settling, gravity is tilted so that the robot faces '
                          'up a slope of this angle [deg]; 6 s at 0.2 m/s, then 3 s stopped')
@@ -46,6 +49,8 @@ parser.add_argument('--no_coupling', action='store_true', help='ankles always pa
 parser.add_argument('--ankle_range', type=float, default=None, help='ankle end stops +- this around the flat pose of the '
                     'default stance (0.1008) [rad] (default: from the USD, +-0.5236)')
 parser.add_argument('--ankle_kd', type=float, default=None, help='passive ankle damping [N m s/rad] (default: ankle_control)')
+parser.add_argument('--gimbal_threshold', type=float, default=GIMBAL_THRESHOLD,
+                    help='gimbal model: reset the passive joint angle above this [rad] (negative: never)')
 args, _ = parser.parse_known_args()
 
 from isaacsim import SimulationApp  # noqa: E402
@@ -64,7 +69,9 @@ from pxr import Gf, PhysxSchema, UsdGeom, UsdPhysics, UsdShade  # noqa: E402
 SimulationManager.switch_physics_engine('physx')
 print('ENGINE', SimulationManager.get_active_physics_engine(), flush=True)
 
-R, B = 0.015, 0.395
+# B: track width of the real robot differential IK (omni_controller track_width 0.4 m); the simulated contact lines are
+# 0.395 m apart. Twist commands pass through the first-order 2 Hz low-pass of the omni_controller (velocity_lpf)
+R, B, LPF_HZ = 0.015, 0.4, 2.0
 HFE_TARGET = {'LF_HFE': args.hfe, 'LH_HFE': -args.hfe, 'RF_HFE': -args.hfe, 'RH_HFE': args.hfe}
 ANKLE_FLAT = math.pi / 2 - args.hfe   # |HFE| + |ankle| = pi/2: track flat on the ground
 if args.slope is not None:
@@ -165,11 +172,12 @@ print(f'DOFs {N}: hfe {len(hfe)} driven wheels {len(wheels_l)}+{len(wheels_r)} m
       f'mu {args.mu}/{MU_DYN} dt {args.dt}', flush=True)
 
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
+kp[hfe] = args.hfe_kp; kd[hfe] = args.hfe_kd; fmax[hfe] = 10.0
 kd[wheels_l + wheels_r] = WHEEL_KD; fmax[wheels_l + wheels_r] = WHEEL_MAX
 kd[ankles] = PASSIVE_DAMPING if args.ankle_kd is None else args.ankle_kd   # passive ankle (velocity control in the air below)
 ankle_ctrl = AnkleController(robot, enabled=not args.no_coupling, wheel_kd=None if args.no_sprocket_torque else WHEEL_KD,
                              wheel_max=WHEEL_MAX, followers=FOLLOWERS, sprocket_radius=args.sprocket_radius)
+gimbal = GimbalReset(robot, args.gimbal_threshold) if args.gimbal_threshold >= 0 else None
 if args.ankle_range is not None:
     lo_, hi_ = (x.numpy() for x in robot.get_dof_limits())
     for n_, i_ in idx.items():
@@ -255,13 +263,18 @@ driven = wheels_l + wheels_r
 rows, t, log_every = [], 0.0, max(1, int(round(0.05 / args.dt)))
 torque = {}        # phase -> list of |torque| / limit of the driven wheels, every step
 vz_straight = []   # base vertical velocity in the straight phase, every step
+axle_z = []        # height of the wheel-2 centres in the straight phase, every step (axle ripple)
+W2 = [robot.link_names.index(f'wheel_2_{t}') for t in ('LEFT_F', 'LEFT_H', 'RIGHT_F', 'RIGHT_H')]
 stab = {'vz': [], 'wxy': [], 'roller': [], 'ankle': [], 'nan': False, 'hfe_dev': [], 'at_stop': [], 'tau_ankle': [],
         'tau_hfe': []}
 lo_lim, hi_lim = (x.numpy()[0] for x in robot.get_dof_limits())
+lpf_a = args.dt * 2 * math.pi * LPF_HZ / (1 + args.dt * 2 * math.pi * LPF_HZ)
+v_f = w_f = 0.0
 for name, v, w, dur in PHASES:
-    send(v, w)
     scene_ = SimulationManager.get_physics_scenes()[0]
     for k in range(int(round(dur / args.dt))):
+        v_f += lpf_a * (v - v_f); w_f += lpf_a * (w - w_f)
+        send(v_f, w_f)
         if name == 'climb' and k * args.dt <= args.slope_ramp:
             # the robot faces +x after settling: gravity tilts progressively so that +x becomes uphill
             th_ = math.radians(args.slope) * min(1.0, k * args.dt / max(args.slope_ramp, 1e-6))
@@ -273,6 +286,7 @@ for name, v, w, dur in PHASES:
         lin, ang = (x.numpy()[0] for x in robot.get_velocities())
         if name == 'straight' and k * args.dt >= 1.0:
             vz_straight.append(lin[2])
+            axle_z.append(robot._physics_articulation_view.get_link_transforms().numpy()[0][W2, 2])
         if t >= 0.5:
             dv = robot.get_dof_velocities().numpy()[0]
             stab['nan'] |= bool(np.isnan(lin).any() or np.isnan(dv).any())
@@ -329,6 +343,10 @@ ms = (ph == 'straight') & (a[:, 0] > a[ph == 'straight', 0].min() + 1.0)
 az = np.diff(np.array(vz_straight)) / args.dt
 print(f'RESULT straight_speed {a[ms, 0].size and np.hypot(np.diff(a[ms, 1]), np.diff(a[ms, 2])).sum() / (a[ms, 0][-1] - a[ms, 0][0]):.3f} m/s '
       f'(cmd 0.2) | jitter std(base z acc) {az.std():.3f} m/s^2', flush=True)
+az_ = np.array(axle_z) - np.array(axle_z).mean(0)
+spec = np.abs(np.fft.rfft(az_, axis=0)).mean(1); fq = np.fft.rfftfreq(len(az_), args.dt)
+print(f'RESULT axle ripple (wheel 2 centre height, straight): peak-to-peak {np.ptp(az_, 0).mean() * 1000:.3f} mm | std '
+      f'{az_.std(0).mean() * 1000:.3f} mm | dominant frequency {fq[1:][np.argmax(spec[1:])]:.1f} Hz', flush=True)
 az_all = np.abs(np.diff(np.array(stab['vz'])) / args.dt)
 print(f"RESULT legs: max |HFE - target| {math.degrees(max(stab['hfe_dev'])):.2f} deg | time with an ankle at a stop "
       f"{100 * np.mean(stab['at_stop']):.0f}% | max |ankle torque| {max(stab['tau_ankle']):.3f} N m | max |HFE torque| "
@@ -342,6 +360,8 @@ for ph, arr in stab['phase'].items():
           + f" | HFE saturated {100 * a_[:, 4:8].any(1).mean():.0f}% of the time"
           + ' | track motor torque mean / max [N m] ' + ' '.join(f'{np.abs(a_[:, 8 + j]).mean():.2f}/{np.abs(a_[:, 8 + j]).max():.1f}' for j in range(4))
           + f' | HFE torque mean {a_[:, 12:16].mean():.2f} N m', flush=True)
+if gimbal is not None and gimbal.ids.size:
+    print(f'RESULT gimbal resets {gimbal.resets} ({gimbal.resets / t:.0f}/s over 16 joints)', flush=True)
 print(f"RESULT stability: p99 |base z acc| {np.percentile(az_all, 99):.2f} m/s^2 | max |roll/pitch rate| "
       f"{max(stab['wxy']):.3f} rad/s | max |roller vel| {max(stab['roller']):.0f} rad/s | max |ankle vel| "
       f"{max(stab['ankle']):.2f} rad/s | NaN {stab['nan']}", flush=True)

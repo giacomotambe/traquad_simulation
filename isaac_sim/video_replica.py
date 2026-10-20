@@ -2,12 +2,13 @@
 
 Frames are saved as PNG named by simulated time, with the command and the measured body velocities
 written on them. Works with both track models: with the cylinder model only the driven wheels (wheel 2, not
-the mimic followers) are commanded. Track motor as in open_traquad.py: 40 Nm and 2 Nm s/rad per track, split over
+the mimic followers) are commanded. Track motor as in open_traquad.py: 1.5 Nm and the real velocity gain (Kd 0.9 at the 28 mm sprocket) per track, split over
 its driven wheels. --csv logs command and measured velocities of every frame.
 usage: ./isaac.sh video_replica.py --usd <robot.usda> --out <frames_dir> [--roller_damping 1e-4] [--csv log.csv]
 """
 import argparse
 from ankle_control import PASSIVE_DAMPING, SPROCKET_RADIUS, AnkleController
+from gimbal_reset import GimbalReset
 import math
 import os
 
@@ -16,7 +17,7 @@ parser.add_argument('--usd', required=True)
 parser.add_argument('--out', required=True)
 parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--roller_friction', type=float, default=0.06, help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.06 = asset value)')
-parser.add_argument('--track_width', type=float, default=0.395)
+parser.add_argument('--track_width', type=float, default=0.4)
 parser.add_argument('--track_max_torque', type=float, default=1.5, help='torque limit of a track motor [N m at r 15 mm]')
 parser.add_argument('--mu', type=float, default=None,
                     help='friction of ground and robot, same material on both (default: ground 1.0, robot default 0.5)')
@@ -136,11 +137,12 @@ left = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'LEFT' in 
 right = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'RIGHT' in n and n not in FOLLOWERS]
 rollers = [i for n, i in idx.items() if '_roller_' in n]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
+kp[hfe] = 60.0; kd[hfe] = 0.6; fmax[hfe] = 10.0
 kd[ankles] = PASSIVE_DAMPING   # passive ankle; velocity control when the track is in the air (ankle_control)
 per_track = len(left) / 2                          # driven wheels per track: 4 (rollers) or 1 (cylinder)
-kd[left + right] = 2.0 / per_track; fmax[left + right] = args.track_max_torque / per_track
-ankle_ctrl = AnkleController(robot, wheel_kd=2.0 / per_track, wheel_max=args.track_max_torque / per_track,
+kd[left + right] = 0.9 * (0.015 / 0.028) ** 2 / per_track; fmax[left + right] = args.track_max_torque / per_track
+gimbal = GimbalReset(robot)   # gimbal model only
+ankle_ctrl = AnkleController(robot, wheel_kd=0.9 * (0.015 / 0.028) ** 2 / per_track, wheel_max=args.track_max_torque / per_track,
                              followers=FOLLOWERS)
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
@@ -183,22 +185,26 @@ except OSError:
 t0 = SimulationManager.get_simulation_time()
 n_saved = 0
 log = []
-MODEL = (f'rollers, track motor max {args.track_max_torque:g} Nm' if rollers else 'cylinder wheels (mimic)') + \
+MODEL = ((f'gimbal spheres, track motor max {args.track_max_torque:g} Nm' if any(n.endswith('_roller_gimbal_joint') for n in idx)
+          else f'sphere pairs, track motor max {args.track_max_torque:g} Nm' if any(n.endswith('_roller_ball_joint') for n in idx)
+         else f'rollers, track motor max {args.track_max_torque:g} Nm') if rollers else 'cylinder wheels (mimic)') + \
     (f', mu {args.mu:g}' if args.mu is not None else ', mu 0.75')
-cmd = (0.0, 0.0)
-track_speed = (0.0, 0.0)
+# the command passes through the first-order 2 Hz low-pass of the real omni_controller (velocity_lpf), updated once per
+# rendered frame
+LPF_WC = 2 * math.pi * 2.0
+v_f = w_f = t_prev = 0.0
 while True:
     t = SimulationManager.get_simulation_time() - t0
     if t > T_END:
         break
     v, w = command(t)
-    if (v, w) != cmd:
-        cmd = (v, w)
-        track_speed = (v - w * args.track_width / 2, v + w * args.track_width / 2)
-        ankle_ctrl.set_speeds(*track_speed)
-        vl, vr = v - w * args.track_width / 2, v + w * args.track_width / 2
-        tgt = np.zeros(N, np.float32); tgt[left] = -vl / R; tgt[right] = vr / R
-        robot.set_dof_velocity_targets(tgt[None])
+    a_ = (t - t_prev) * LPF_WC / (1 + (t - t_prev) * LPF_WC)
+    t_prev = t
+    v_f += a_ * (v - v_f); w_f += a_ * (w - w_f)
+    vl, vr = v_f - w_f * args.track_width / 2, v_f + w_f * args.track_width / 2
+    ankle_ctrl.set_speeds(vl, vr)
+    tgt = np.zeros(N, np.float32); tgt[left] = -vl / R; tgt[right] = vr / R
+    robot.set_dof_velocity_targets(tgt[None])
     p, q = robot.get_world_poses()
     p = p.numpy()[0]
     target = np.array([p[0], p[1], 0.12])

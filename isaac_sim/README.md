@@ -2,20 +2,21 @@
 
 ## Isaac asset (`assets/traquad/traquad.usda`)
 
-Instanceable USD of the current traquad model (roller wheels, real masses 7.8 kg, left/right symmetric),
+Instanceable USD of the current traquad model (roller wheels, real masses 8.0 kg (weighed), left/right symmetric),
 ready for Isaac Sim / Isaac Lab (`sim_utils.UsdFileCfg(usd_path=...)`; used by `../open_traquad.py`).
 
 - Built from the xacro by `./make_isaac_asset.sh [roller_damping] [roller_friction]`
   (xacro -> URDF -> URDF importer -> `finalize_usd.py`); rebuild it whenever the xacro changes.
 - Meshes are stored once in `payloads/geometries.usd` and referenced as instances (`instanceable = true`).
 - Physics variant `physx` selected, floating base, articulation self-collisions off.
-- Default drives written in the file: HFE PD Kp 100 / Kd 10, max 10 Nm; ankles passive damping 0.01 Nm s/rad, end
+- Default drives written in the file: HFE PD Kp 60 / Kd 0.6 (real robot, mulsbc_ws traquad8_dji.xacro), max 10 Nm; ankles passive damping 0.01 Nm s/rad, end
   stops +-30 deg around the flat pose of the default stance (HFE +-1.47, ankle +-0.1008); **rollers passive, damping
   1e-4 Nm s/rad, dry friction 0.06 Nm**; wheels velocity drive with the track motor split over the 4 wheels of a track:
-  **1.5 Nm and 2 Nm s/rad per track at r = 15 mm (`--track_max_torque`, `--track_damping`)**, i.e. 0.375 Nm and
-  0.5 Nm s/rad per wheel, armature 0.001 (1.5 Nm = 100 N of belt force).
+  **1.5 Nm per track at r = 15 mm (`--track_max_torque`) and the real velocity gain, Kd 0.9 N m s/rad at the 28 mm
+  sprocket referred to the wheels (`--track_damping` 0.9 (15/28)^2 = 0.26 per track)**, i.e. 0.375 Nm and
+  0.065 Nm s/rad per wheel, armature 0.001 (1.5 Nm = 100 N of belt force).
 - Ankle control (not in the file, added by the controllers: `ankle_control.py` here, the track action in Isaac Lab,
-  `../open_traquad.py`): the drive sprocket (radius r_s = 25 mm, placeholder) is coaxial with the ankle. Track touching
+  `../open_traquad.py`): the drive sprocket (radius r_s = 28 mm, wheel_rad of the robot IK) is coaxial with the ankle. Track touching
   the ground: the ankle gets the torque the sprocket puts on the track, (r_s / r_wheel) x the drive torque of the track
   wheels (the simulated motor drives the wheels, so without it the traction pitches the track with F h instead of
   F (h - r_s) and the tracks tip on slopes the real robot climbs). Track in the air for more than 50 ms: PI velocity
@@ -109,7 +110,7 @@ if it does not exist, `isaac.sh` uses the python of the active environment when 
   `--roller_friction` (default: USD).
 - Initial state: legs at target, tracks flat.
 - Maneuver: 3 s settle, 8 s rotation in place (ω = 0.5 rad/s), 2 s stop, 10 s turn (v = 0.2 m/s, ω = 0.5 rad/s), 2 s
-  stop, 5 s straight. Track speeds from r = 0.015 m, B = 0.395 m. Besides yaw, drift and pose error it reports the
+  stop, 5 s straight. Track speeds from r = 0.015 m and the IK track width of the robot, B = 0.4 m, after the 2 Hz low-pass of the omni_controller. Besides yaw, drift and pose error it reports the
   HFE deviation, the time with an ankle on an end stop, and per phase the ankle angles, the time the HFE are saturated
   and the track motor torques.
 
@@ -141,7 +142,7 @@ exceeds tau / r_roller, so the robot holds lateral forces up to about 12 * tau /
 - Use a collision plane as ground: a thin large box makes the cylinder-wheel contacts explode.
 - Set the initial ankle angles: starting at 0 (outside the ankle limits) leaves the hind tracks tilted.
 - Camera lens: set `focalLength` / aperture on the USD camera prim (in mm); `RtxCamera.camera.set_focal_lengths` uses other units.
-- Track width in the controller: 0.395 m (contact lines at y = ±0.1975), not 0.35.
+- Track width in the open-loop controllers: 0.4 m, as the real omni_controller IK (the contact lines are at y = ±0.1975).
 - Rigid track wheels do not turn in PhysX. With plain cylinder wheels (`TRACK_MODEL=cylinder`, 2026-10) the robot
   goes straight cleanly (0.200 m/s, vertical jitter 0.7 m/s^2 at 1 ms vs 3.4 with rollers, 0.03 at 5 ms) but rotates
   0% in place and in a curve (7% / 4% with mu 0.75 and 40 Nm per track, 2026-10-06). Not the cause: torque limit (0.3 or 10 Nm), mimic joints, polygonal cylinders
@@ -181,6 +182,6 @@ exceeds tau / r_roller, so the robot holds lateral forces up to about 12 * tau /
   about mu*m*g (30 / 40 / 50 / 60 N). With tau 0.02 the rollers give way at about 30 N or 20-25 deg whatever mu is.
   The rollers stay locked while tau > mu*m*g*r_roller/N_contacts = 0.052*mu (7.8 kg, 12 rollers): tau is a property of
   the robot, the grip comes from mu.
-- The scripts of this folder use the current model: HFE Kd 10, passive ankles (damping 0.05), real mass 7.8 kg;
+- The scripts of this folder use the current model: HFE PD 60 / 0.6, real track velocity gain, passive ankles (damping 0.01), real mass 8.0 kg (weighed 2026-10-20);
   `--roller_friction` is always applied (default 0.06, the asset value; 0 removes it). `video_replica.py` also
   handles the cylinder model (only the driven wheels are commanded) and logs velocities with `--csv`.

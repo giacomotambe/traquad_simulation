@@ -18,10 +18,11 @@
     </xacro:macro>
 
     <!-- ===================== MASSES (real robot) =====================
-         body 1.7 kg including IMU (0.010 kg) and lidar (0.125 kg) links, so base_link = 1.565 kg;
-         each shoulder 0.6 kg (body + 4 shoulders = 4.1 kg), each upper leg 0.6 kg,
-         each track 0.325 kg (track_mass_scale in track.xacro); total 7.8 kg. Inertias scale with the mass. -->
-    <xacro:property name="base_mass" value="${1.7 - 0.010 - 0.125}" />
+         whole robot weighed 8.0 kg (2026-10-20). Each shoulder 0.6 kg, each upper leg 0.6 kg,
+         each track 0.325 kg (track_mass_scale in track.xacro); the body takes the rest: 1.9 kg (1.7 kg estimated
+         before the weighing, the 0.2 kg difference goes to the body) including IMU (0.010 kg) and lidar (0.125 kg)
+         links, so base_link = 1.765 kg. Inertias scale with the mass. -->
+    <xacro:property name="base_mass" value="${1.9 - 0.010 - 0.125}" />
     <xacro:property name="base_mass_scale" value="${base_mass / 1.3008737}" />
     <xacro:property name="shoulder_mass_scale" value="${0.6 / 0.47669673}" />
     <xacro:property name="upper_leg_mass_scale" value="${0.6 / 0.47669673}" />

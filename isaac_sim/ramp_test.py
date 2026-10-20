@@ -7,7 +7,7 @@ from the same settled state, prints the downhill displacement after --hold secon
 downhill speed.
 
 usage: ./isaac.sh ramp_test.py --usd <robot.usda> [--roller_friction tau] [--roller_damping d]
-                               [--mass 7.8] [--angles 5 10 15 20 25 30 35 40]
+                               [--mass 8.0] [--angles 5 10 15 20 25 30 35 40]
 """
 import argparse
 import math
@@ -19,7 +19,7 @@ parser.add_argument('--mu', type=float, default=None,
                     help='friction of ground and robot, same material on both (default: ground 1.0, robot default 0.5, '
                          'i.e. 0.75 effective as in open_traquad.py)')
 parser.add_argument('--roller_damping', type=float, default=1e-4)
-parser.add_argument('--mass', type=float, default=7.8, help='total robot mass [kg]')
+parser.add_argument('--mass', type=float, default=8.0, help='total robot mass [kg]')
 parser.add_argument('--angles', type=float, nargs='+', default=[5, 10, 15, 20, 25, 30, 35, 40])
 parser.add_argument('--hold', type=float, default=5.0, help='time on the slope [s]')
 args, _ = parser.parse_known_args()
@@ -94,9 +94,9 @@ ankles = [i for n, i in idx.items() if n.endswith('_ankle')]
 wheels = [i for n, i in idx.items() if n.startswith('joint_wheel_')]
 rollers = [i for n, i in idx.items() if '_roller_' in n]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
+kp[hfe] = 60.0; kd[hfe] = 0.6; fmax[hfe] = 10.0
 kd[ankles] = 0.01   # passive ankles (asset value): parked, the tracks touch the ground
-kd[wheels] = 0.5; fmax[wheels] = 0.375         # wheels held at zero speed (parked)
+kd[wheels] = 0.9 * (0.015 / 0.028) ** 2 / 4; fmax[wheels] = 0.375   # parked: real track velocity gain (Kd 0.9 at the 28 mm sprocket)
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
 robot.set_dof_max_efforts(fmax[None])

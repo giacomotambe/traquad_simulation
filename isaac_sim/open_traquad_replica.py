@@ -2,7 +2,7 @@
 friction, track width and --demo command sequence. Prints measured vs commanded body velocities
 per command segment and the wheel speed tracking.
 
-usage: ./isaac.sh open_traquad_replica.py --usd <robot.usda> [--roller_damping d] [--wheel_kd 0.5]
+usage: ./isaac.sh open_traquad_replica.py --usd <robot.usda> [--roller_damping d] [--wheel_kd 0.065]
 """
 import argparse
 from ankle_control import PASSIVE_DAMPING, SPROCKET_RADIUS, AnkleController
@@ -12,9 +12,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--usd', required=True)
 parser.add_argument('--roller_friction', type=float, default=0.06,
                     help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.06 = asset value)')
-parser.add_argument('--roller_damping', type=float, default=3e-5)
-parser.add_argument('--wheel_kd', type=float, default=0.5)
-parser.add_argument('--track_width', type=float, default=0.395)
+parser.add_argument('--roller_damping', type=float, default=1e-4)
+parser.add_argument('--wheel_kd', type=float, default=0.9 * (0.015 / 0.028) ** 2 / 4)
+parser.add_argument('--track_width', type=float, default=0.4)
 parser.add_argument('--ground_friction', type=float, default=1.0)
 args, _ = parser.parse_known_args()
 
@@ -86,7 +86,7 @@ right = [i for n, i in idx.items() if n.startswith('joint_wheel_') and 'RIGHT' i
 rollers = [i for n, i in idx.items() if '_roller_' in n]
 
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
-kp[hfe] = 100.0; kd[hfe] = 10.0; fmax[hfe] = 10.0
+kp[hfe] = 60.0; kd[hfe] = 0.6; fmax[hfe] = 10.0
 kd[ankles] = PASSIVE_DAMPING   # passive ankle; velocity control when the track is in the air (ankle_control)
 
 kd[left + right] = args.wheel_kd; fmax[left + right] = 0.375   # track motor 1.5 N m per track

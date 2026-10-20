@@ -16,6 +16,7 @@ Usage (conda env with Isaac Lab 3.0):
 """
 
 import argparse
+import math
 import os
 
 from isaaclab.app import add_launcher_args, launch_simulation
@@ -84,8 +85,9 @@ USD_PATH = os.environ.get(
 
 # Driven wheels and their velocity drive (damping = velocity gain). With the cylinder model only wheel 2 of each
 # track is driven, wheels 1, 3, 4 follow it through mimic joints. Track motor (same values as isaac_sim/finalize_usd.py):
-# torque limit --track_max_torque and velocity gain 2 Nm s/rad per track (at r = 15 mm), split over its driven wheels
-TRACK_MAX_TORQUE, TRACK_DAMPING = args_cli.track_max_torque, 2.0
+# torque limit --track_max_torque and the velocity gain of the real track joint (moteus Kd 0.9 N m s/rad at the 28 mm
+# sprocket, Kp 0, mulsbc_ws traquad8_dji.xacro) referred to the 15 mm wheels, split over the driven wheels of the track
+TRACK_MAX_TORQUE, TRACK_DAMPING = args_cli.track_max_torque, 0.9 * (0.015 / 0.028) ** 2
 if args_cli.model == "cylinder":
     WHEEL_JOINTS, DRIVEN_PER_TRACK = "joint_wheel_2_", 1
 else:
@@ -94,9 +96,9 @@ WHEEL_MAX_TORQUE, WHEEL_DAMPING = TRACK_MAX_TORQUE / DRIVEN_PER_TRACK, TRACK_DAM
 
 # Track geometry (from traquad.urdf)
 WHEEL_RADIUS = 0.015  # [m]
-# lateral distance between the left and right track contact lines [m]: the wheel joints are at
-# y = +-0.175 but the 45 mm wide wheels extend outward, so the contacts are at y = +-0.1975
-TRACK_WIDTH = 0.395
+# track width of the differential IK of the real robot (omni_controller track_width, default 0.4 m; not set in
+# traquad8_dji.yaml). The simulated contact lines are at y = +-0.1975 (wheel joints at +-0.175, 45 mm wide wheels)
+TRACK_WIDTH = 0.4
 # Skid-steer slip compensation: effective width > geometric width (tune if turning is too slow/fast)
 TRACK_WIDTH_FACTOR = 1.0
 # Ankle (same model as isaaclab_assets/robots/traquad.py): the drive sprocket is coaxial with the ankle. On the ground
@@ -104,13 +106,15 @@ TRACK_WIDTH_FACTOR = 1.0
 # (the simulated motor drives the wheels, the real one the belt from the pivot); with the track in the air a PI velocity
 # controller turns the frame with the sprocket (v / SPROCKET_RADIUS) until an end stop. Contact is taken from the
 # height of the wheels above the flat ground of this script.
-SPROCKET_RADIUS = 0.025  # [m], placeholder until measured
+SPROCKET_RADIUS = 0.028  # [m], wheel_rad of the real robot IK (mulsbc_ws traquad8_dji.yaml)
 ANKLE_PASSIVE_DAMPING = 0.01  # [N m s/rad]
 ANKLE_SPEED_GAIN = 0.2  # [N m s/rad]
 ANKLE_INTEGRAL_GAIN = 2.0  # [N m/rad]
 ANKLE_MAX_TORQUE = 0.05  # [N m]
 CONTACT_MARGIN = 0.004  # [m], wheel centre below WHEEL_RADIUS + this: the track touches the ground
 AIR_DELAY = 0.05  # [s], time without contact before the ankle controller takes over
+# first-order low-pass on the twist command, as the omni_controller of the real robot (velocity_lpf, 2 Hz)
+TWIST_LPF_HZ = 2.0
 
 # Wheel joint axes point along -y (left) and +y (right) in the world frame,
 # so a positive forward speed needs a negative spin on the left and positive on the right.
@@ -203,10 +207,10 @@ def make_actuators_cfg():
             joint_names_expr=[".*HFE"],
             # hip motor limit raised from 5 N m (Gazebo value): the hips saturated in the first trainings
             joint_effort_limit=10.0,
-            joint_velocity_limit=5.0,
-            # same PD as Gazebo (pd_controller) and the Isaac Sim tests
-            stiffness=100.0,
-            damping=10.0,
+            # real robot (mulsbc_ws traquad8_dji.xacro, joint units): moteus max_velocity 10 rad/s, Kp 60, Kd 0.6
+            joint_velocity_limit=10.0,
+            stiffness=60.0,
+            damping=0.6,
         ),
         # ankles: coupled to the track motor by default (velocity drive towards the sprocket speed, as the asset and
         # the Isaac Lab tasks); --ankle_stiffness > 0 holds them with a PD instead
@@ -462,9 +466,14 @@ def run(sim_cfg):
     count = 0
     leg_dev = 0.0
 
+    lpf_alpha = sim_dt * 2.0 * math.pi * TWIST_LPF_HZ / (1.0 + sim_dt * 2.0 * math.pi * TWIST_LPF_HZ)
+    lin_vel = ang_vel = 0.0
+
     while sim.is_running():
 
-        lin_vel, ang_vel = get_command(sim_time)
+        lin_cmd, ang_cmd = get_command(sim_time)
+        lin_vel += lpf_alpha * (lin_cmd - lin_vel)
+        ang_vel += lpf_alpha * (ang_cmd - ang_vel)
 
         wheel_vel = twist_to_wheel_velocities(robot, left_ids, right_ids, lin_vel, ang_vel)
         robot.actuators.target_command.set_position_index(value=pose_target)

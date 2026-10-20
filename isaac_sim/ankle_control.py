@@ -21,7 +21,7 @@ ground (a tilted gravity is fine).
 import numpy as np
 
 WHEEL_RADIUS = 0.015
-SPROCKET_RADIUS = 0.025      # placeholder until measured: smallest value that climbs 35 deg at mu 0.75 without tipping
+SPROCKET_RADIUS = 0.028      # wheel_rad of the real robot IK (mulsbc_ws traquad8_dji.yaml); 25 mm was the smallest that climbs 35 deg
 PASSIVE_DAMPING = 0.01       # [N m s/rad]
 SPEED_GAIN = 0.2             # [N m s/rad]
 INTEGRAL_GAIN = 2.0          # [N m/rad]
