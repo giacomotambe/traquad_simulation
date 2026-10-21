@@ -23,8 +23,9 @@ ready for Isaac Sim / Isaac Lab (`sim_utils.UsdFileCfg(usd_path=...)`; used by `
   control of the ankle towards v_track / r_s (Kp 0.2 Nm s/rad, Ki 2 Nm/rad, max 0.05 Nm, anti-windup), so the frame
   turns with the sprocket, however slow the command, until an end stop; with no command it holds its angle.
 - Track mass: body 60% with its CoM placed so that the whole track has its CoM below the ankle axis when flat.
-- Wheel-ground friction 0.75 in the tests (open_traquad.py: ground 1.0 averaged with the robot default 0.5;
-  track_test.py `--mu 0.75`; Gazebo `wheel_mu` 0.75). Track bodies collide as boxes, contact offset 3 mm on wheels,
+- Wheel-ground friction 0.6 by default in the tests: static friction measured for the tracks on the lab rubber mat
+  (2026-10-21), the reference for the model identification (open_traquad.py: wheels and ground 0.6; `--mu 0.6` in the
+  Isaac Sim scripts, same material on ground and robot; Gazebo `wheel_mu` 0.6). The training keeps its own friction range. Track bodies collide as boxes, contact offset 3 mm on wheels,
   rollers and track bodies. Roller dry friction: `physxJointAxis:angular:static/dynamicFrictionEffort`. Isaac Lab
   actuators override the joints they match (HFE, ankles, wheels); the rollers keep the values of the file.
 - Not in the file: the contact material (friction with the ground) and the ground itself.
@@ -102,7 +103,7 @@ if it does not exist, `isaac.sh` uses the python of the active environment when 
 
 ## Test setup (`track_test.py`)
 
-- PhysX, 1 ms step (`--dt`), TGS solver, CPU; ground is a collision plane; isotropic friction `--mu` (0.75) on ground
+- PhysX, 1 ms step (`--dt`), TGS solver, CPU; ground is a collision plane; isotropic friction `--mu` (0.6) on ground
   and robot.
 - HFE: PD Kp = 100, Kd = 10, max 10 Nm, stance `--hfe` (1.47, default stance; 1.13 in the earlier tests). Wheels:
   velocity drive and torque limit from the USD (`--wheel_max` per wheel). Ankles: passive damping 0.01 plus the

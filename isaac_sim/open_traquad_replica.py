@@ -15,7 +15,8 @@ parser.add_argument('--roller_friction', type=float, default=0.06,
 parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--wheel_kd', type=float, default=0.9 * (0.015 / 0.028) ** 2 / 4)
 parser.add_argument('--track_width', type=float, default=0.4)
-parser.add_argument('--ground_friction', type=float, default=1.0)
+parser.add_argument('--mu', type=float, default=0.6,
+                    help='friction of ground and robot, same material on both (default 0.6: static friction measured for the tracks on the lab rubber mat)')
 args, _ = parser.parse_known_args()
 
 from isaacsim import SimulationApp  # noqa: E402
@@ -46,8 +47,8 @@ async def build():
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
     mat = UsdShade.Material.Define(stage, '/World/GroundMaterial')
     m = UsdPhysics.MaterialAPI.Apply(mat.GetPrim())
-    m.CreateStaticFrictionAttr().Set(args.ground_friction)
-    m.CreateDynamicFrictionAttr().Set(args.ground_friction)
+    m.CreateStaticFrictionAttr().Set(args.mu)
+    m.CreateDynamicFrictionAttr().Set(args.mu)
     UsdGeom.Xform.Define(stage, '/World/Ground')
     plane = UsdGeom.Plane.Define(stage, '/World/Ground/Plane')
     plane.CreateAxisAttr().Set('Z')
@@ -58,6 +59,9 @@ async def build():
     robot_prim.GetVariantSets().GetVariantSet('Physics').SetVariantSelection('physx')
     UsdGeom.XformCommonAPI(robot_prim).SetTranslate(Gf.Vec3d(0.0, 0.0, 0.30))
     await app_utils.update_app_async()
+    for p in stage.Traverse():   # same material on every collider of the robot: wheel-ground friction = mu
+        if str(p.GetPath()).startswith('/World/robot') and p.HasAPI(UsdPhysics.CollisionAPI):
+            UsdShade.MaterialBindingAPI.Apply(p).Bind(mat, UsdShade.Tokens.strongerThanDescendants, 'physics')
     roots = [p for p in stage.Traverse()
              if str(p.GetPath()).startswith('/World/robot') and p.HasAPI(UsdPhysics.ArticulationRootAPI)]
     px = PhysxSchema.PhysxArticulationAPI.Apply(roots[0])
@@ -105,7 +109,7 @@ if rollers:   # dry friction: a roller turns only above this torque
     tau = np.full((1, len(rollers)), args.roller_friction, np.float32)
     robot.set_dof_friction_properties(static_frictions=tau, dynamic_frictions=tau, dof_indices=rollers)
 print(f'DOFs {N}: wheels {len(left)}+{len(right)} rollers {len(rollers)} | wheel Kd {args.wheel_kd} '
-      f'| B {args.track_width} | ground mu {args.ground_friction}', flush=True)
+      f'| B {args.track_width} | mu {args.mu}', flush=True)
 
 
 def body_vel():

@@ -24,8 +24,8 @@ parser.add_argument('--out', required=True)
 parser.add_argument('--damping', type=float, default=1e-4, help='roller joint damping [Nms/rad]')
 parser.add_argument('--roller_friction', type=float, default=None,
                     help='roller joint dry friction [Nm] (default: from the USD, 0.06)')
-parser.add_argument('--mu', type=float, default=0.75,
-                    help='isotropic (static) friction of ground and robot (0.75 = effective value of open_traquad.py)')
+parser.add_argument('--mu', type=float, default=0.6,
+                    help='isotropic (static) friction of ground and robot (0.6 = measured for the tracks on the lab rubber mat)')
 parser.add_argument('--mu_dyn', type=float, default=None, help='dynamic friction (default: same as --mu)')
 parser.add_argument('--wheel_kd', type=float, default=None, help='driven wheel velocity gain (default: from the USD)')
 parser.add_argument('--wheel_max', type=float, default=None, help='driven wheel torque limit (default: from the USD)')

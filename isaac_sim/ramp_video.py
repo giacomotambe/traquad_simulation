@@ -18,6 +18,8 @@ parser.add_argument('--tau_a', type=float, default=0.0)
 parser.add_argument('--tau_b', type=float, default=0.018)
 parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--mass', type=float, default=8.0)
+parser.add_argument('--mu', type=float, default=0.6,
+                    help='friction of ground and robot, same material on both (default 0.6: static friction measured for the tracks on the lab rubber mat)')
 parser.add_argument('--duration', type=float, default=8.0)
 args, _ = parser.parse_known_args()
 
@@ -54,8 +56,8 @@ async def build():
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
     mat = UsdShade.Material.Define(stage, '/World/GroundMaterial')
     m = UsdPhysics.MaterialAPI.Apply(mat.GetPrim())
-    m.CreateStaticFrictionAttr().Set(1.0)
-    m.CreateDynamicFrictionAttr().Set(1.0)
+    m.CreateStaticFrictionAttr().Set(args.mu)
+    m.CreateDynamicFrictionAttr().Set(args.mu)
     ramp = UsdGeom.Xform.Define(stage, '/World/Ramp')
     UsdGeom.Xformable(ramp.GetPrim()).AddRotateXOp().Set(args.angle)
     plane = UsdGeom.Plane.Define(stage, '/World/Ramp/Plane')
@@ -85,6 +87,9 @@ async def build():
         prim.GetVariantSets().GetVariantSet('Physics').SetVariantSelection('physx')
         UsdGeom.XformCommonAPI(prim).SetTranslate(Gf.Vec3d(x, 0.0, 2.0))   # out of the way until placed
         await app_utils.update_app_async()
+        for p in stage.Traverse():   # same material on every collider of the robot: wheel-ground friction = mu
+            if str(p.GetPath()).startswith(path) and p.HasAPI(UsdPhysics.CollisionAPI):
+                UsdShade.MaterialBindingAPI.Apply(p).Bind(mat, UsdShade.Tokens.strongerThanDescendants, 'physics')
         root = [p for p in stage.Traverse() if str(p.GetPath()).startswith(path) and p.HasAPI(UsdPhysics.ArticulationRootAPI)][0]
         px = PhysxSchema.PhysxArticulationAPI.Apply(root)
         px.CreateEnabledSelfCollisionsAttr().Set(False)

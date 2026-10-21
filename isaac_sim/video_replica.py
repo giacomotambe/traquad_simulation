@@ -19,8 +19,8 @@ parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--roller_friction', type=float, default=0.06, help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.06 = asset value)')
 parser.add_argument('--track_width', type=float, default=0.4)
 parser.add_argument('--track_max_torque', type=float, default=1.5, help='torque limit of a track motor [N m at r 15 mm]')
-parser.add_argument('--mu', type=float, default=None,
-                    help='friction of ground and robot, same material on both (default: ground 1.0, robot default 0.5)')
+parser.add_argument('--mu', type=float, default=0.6,
+                    help='friction of ground and robot, same material on both (default 0.6: static friction measured for the tracks on the lab rubber mat)')
 parser.add_argument('--slope', type=float, default=None,
                     help='climb instead of the command sequence: gravity tilts to this slope [deg] (the robot faces uphill), '
                          'the camera turns with gravity so the ground looks inclined')
@@ -63,8 +63,8 @@ async def build():
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
     mat = UsdShade.Material.Define(stage, '/World/GroundMaterial')
     m = UsdPhysics.MaterialAPI.Apply(mat.GetPrim())
-    m.CreateStaticFrictionAttr().Set(1.0 if args.mu is None else args.mu)
-    m.CreateDynamicFrictionAttr().Set(1.0 if args.mu is None else args.mu)
+    m.CreateStaticFrictionAttr().Set(args.mu)
+    m.CreateDynamicFrictionAttr().Set(args.mu)
     UsdGeom.Xform.Define(stage, '/World/Ground')
     plane = UsdGeom.Plane.Define(stage, '/World/Ground/Plane')
     plane.CreateAxisAttr().Set('Z')
@@ -92,10 +92,9 @@ async def build():
     robot_prim.GetVariantSets().GetVariantSet('Physics').SetVariantSelection('physx')
     UsdGeom.XformCommonAPI(robot_prim).SetTranslate(Gf.Vec3d(0.0, 0.0, 0.30))
     await app_utils.update_app_async()
-    if args.mu is not None:   # same material on every collider of the robot: wheel-ground friction = mu
-        for p in stage.Traverse():
-            if str(p.GetPath()).startswith('/World/robot') and p.HasAPI(UsdPhysics.CollisionAPI):
-                UsdShade.MaterialBindingAPI.Apply(p).Bind(mat, UsdShade.Tokens.strongerThanDescendants, 'physics')
+    for p in stage.Traverse():   # same material on every collider of the robot: wheel-ground friction = mu
+        if str(p.GetPath()).startswith('/World/robot') and p.HasAPI(UsdPhysics.CollisionAPI):
+            UsdShade.MaterialBindingAPI.Apply(p).Bind(mat, UsdShade.Tokens.strongerThanDescendants, 'physics')
     roots = [p for p in stage.Traverse()
              if str(p.GetPath()).startswith('/World/robot') and p.HasAPI(UsdPhysics.ArticulationRootAPI)]
     px = PhysxSchema.PhysxArticulationAPI.Apply(roots[0])
@@ -188,7 +187,7 @@ log = []
 MODEL = ((f'gimbal spheres, track motor max {args.track_max_torque:g} Nm' if any(n.endswith('_roller_gimbal_joint') for n in idx)
           else f'sphere pairs, track motor max {args.track_max_torque:g} Nm' if any(n.endswith('_roller_ball_joint') for n in idx)
          else f'rollers, track motor max {args.track_max_torque:g} Nm') if rollers else 'cylinder wheels (mimic)') + \
-    (f', mu {args.mu:g}' if args.mu is not None else ', mu 0.75')
+    f', mu {args.mu:g}'
 # the command passes through the first-order 2 Hz low-pass of the real omni_controller (velocity_lpf), updated once per
 # rendered frame
 LPF_WC = 2 * math.pi * 2.0

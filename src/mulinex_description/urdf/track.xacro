@@ -36,10 +36,10 @@
   <xacro:property name="wheel_izz" default="${1.15625e-05 * track_mass_scale}"/>
   <xacro:property name="wheel_mesh" default="file://$(find mulinex_description)/meshes//wheel.stl"/>
 
-  <!-- Wheel/roller contact. Isotropic friction 0.75, the effective wheel-ground value of Isaac Sim
-       (open_traquad.py: ground 1.0 averaged with the robot default 0.5; the Gazebo ground keeps the SDF default 1.0,
-       the contact takes the minimum). Lateral compliance comes from passive rollers on the ground wheels -->
-  <xacro:property name="wheel_mu" value="0.75"/>
+  <!-- Wheel/roller contact. Isotropic friction 0.6, the static friction measured for the tracks on the lab rubber mat
+       (2026-10-21), as in the Isaac Sim tests (the Gazebo ground keeps the SDF default 1.0, the contact takes the
+       minimum). Lateral compliance comes from passive rollers on the ground wheels -->
+  <xacro:property name="wheel_mu" value="0.6"/>
   <xacro:property name="roller_n" value="${int('$(arg roller_n)')}"/>
   <xacro:property name="roller_ring_radius" value="${float('$(arg roller_offset)')}"/>
   <xacro:property name="roller_radius" value="${0.015 - roller_ring_radius}"/>

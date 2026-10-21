@@ -41,17 +41,17 @@ parser.add_argument(
 parser.add_argument(
     "--wheel_friction",
     type=float,
-    default=0.0,
-    help="Static friction of the track wheels, min with the ground (default 0: robot default material 0.5, "
-    "averaged with the ground: 0.75 with --ground_friction 1.0).",
+    default=0.6,
+    help="Static friction of the track wheels, min with the ground (default 0.6: measured for the tracks on the lab "
+    "rubber mat; 0 keeps the robot default material 0.5, averaged with the ground).",
 )
 parser.add_argument(
     "--wheel_dynamic_friction",
     type=float,
-    default=0.45,
-    help="Dynamic (sliding) friction of the track wheels (min with the ground).",
+    default=None,
+    help="Dynamic (sliding) friction of the track wheels (min with the ground; default: same as the static one).",
 )
-parser.add_argument("--ground_friction", type=float, default=1.0, help="Friction of the ground plane.")
+parser.add_argument("--ground_friction", type=float, default=0.6, help="Friction of the ground plane.")
 parser.add_argument(
     "--track_max_torque",
     type=float,
