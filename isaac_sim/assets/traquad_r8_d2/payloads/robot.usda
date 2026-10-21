@@ -1,0 +1,1696 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.3.2"
+    }
+    defaultPrim = "traquad"
+    endTimeCode = 1000000
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    startTimeCode = 0
+    upAxis = "Z"
+)
+
+over "traquad" (
+    prepend apiSchemas = ["IsaacRobotAPI"]
+)
+{
+    prepend rel isaac:physics:robotJoints = [
+        </traquad/Physics/LH_HFE>,
+        </traquad/Physics/LF_HFE>,
+        </traquad/Physics/RF_HFE>,
+        </traquad/Physics/RH_HFE>,
+        </traquad/Physics/body_left_H_ankle>,
+        </traquad/Physics/joint_wheel_1_LEFT_H>,
+        </traquad/Physics/joint_wheel_2_LEFT_H>,
+        </traquad/Physics/joint_wheel_3_LEFT_H>,
+        </traquad/Physics/joint_wheel_4_LEFT_H>,
+        </traquad/Physics/wheel_1_LEFT_H_roller_0_joint>,
+        </traquad/Physics/wheel_1_LEFT_H_roller_1_joint>,
+        </traquad/Physics/wheel_1_LEFT_H_roller_2_joint>,
+        </traquad/Physics/wheel_1_LEFT_H_roller_3_joint>,
+        </traquad/Physics/wheel_1_LEFT_H_roller_4_joint>,
+        </traquad/Physics/wheel_1_LEFT_H_roller_5_joint>,
+        </traquad/Physics/wheel_1_LEFT_H_roller_6_joint>,
+        </traquad/Physics/wheel_1_LEFT_H_roller_7_joint>,
+        </traquad/Physics/wheel_2_LEFT_H_roller_0_joint>,
+        </traquad/Physics/wheel_2_LEFT_H_roller_1_joint>,
+        </traquad/Physics/wheel_2_LEFT_H_roller_2_joint>,
+        </traquad/Physics/wheel_2_LEFT_H_roller_3_joint>,
+        </traquad/Physics/wheel_2_LEFT_H_roller_4_joint>,
+        </traquad/Physics/wheel_2_LEFT_H_roller_5_joint>,
+        </traquad/Physics/wheel_2_LEFT_H_roller_6_joint>,
+        </traquad/Physics/wheel_2_LEFT_H_roller_7_joint>,
+        </traquad/Physics/wheel_3_LEFT_H_roller_0_joint>,
+        </traquad/Physics/wheel_3_LEFT_H_roller_1_joint>,
+        </traquad/Physics/wheel_3_LEFT_H_roller_2_joint>,
+        </traquad/Physics/wheel_3_LEFT_H_roller_3_joint>,
+        </traquad/Physics/wheel_3_LEFT_H_roller_4_joint>,
+        </traquad/Physics/wheel_3_LEFT_H_roller_5_joint>,
+        </traquad/Physics/wheel_3_LEFT_H_roller_6_joint>,
+        </traquad/Physics/wheel_3_LEFT_H_roller_7_joint>,
+        </traquad/Physics/body_left_F_ankle>,
+        </traquad/Physics/joint_wheel_1_LEFT_F>,
+        </traquad/Physics/joint_wheel_2_LEFT_F>,
+        </traquad/Physics/joint_wheel_3_LEFT_F>,
+        </traquad/Physics/joint_wheel_4_LEFT_F>,
+        </traquad/Physics/wheel_1_LEFT_F_roller_0_joint>,
+        </traquad/Physics/wheel_1_LEFT_F_roller_1_joint>,
+        </traquad/Physics/wheel_1_LEFT_F_roller_2_joint>,
+        </traquad/Physics/wheel_1_LEFT_F_roller_3_joint>,
+        </traquad/Physics/wheel_1_LEFT_F_roller_4_joint>,
+        </traquad/Physics/wheel_1_LEFT_F_roller_5_joint>,
+        </traquad/Physics/wheel_1_LEFT_F_roller_6_joint>,
+        </traquad/Physics/wheel_1_LEFT_F_roller_7_joint>,
+        </traquad/Physics/wheel_2_LEFT_F_roller_0_joint>,
+        </traquad/Physics/wheel_2_LEFT_F_roller_1_joint>,
+        </traquad/Physics/wheel_2_LEFT_F_roller_2_joint>,
+        </traquad/Physics/wheel_2_LEFT_F_roller_3_joint>,
+        </traquad/Physics/wheel_2_LEFT_F_roller_4_joint>,
+        </traquad/Physics/wheel_2_LEFT_F_roller_5_joint>,
+        </traquad/Physics/wheel_2_LEFT_F_roller_6_joint>,
+        </traquad/Physics/wheel_2_LEFT_F_roller_7_joint>,
+        </traquad/Physics/wheel_3_LEFT_F_roller_0_joint>,
+        </traquad/Physics/wheel_3_LEFT_F_roller_1_joint>,
+        </traquad/Physics/wheel_3_LEFT_F_roller_2_joint>,
+        </traquad/Physics/wheel_3_LEFT_F_roller_3_joint>,
+        </traquad/Physics/wheel_3_LEFT_F_roller_4_joint>,
+        </traquad/Physics/wheel_3_LEFT_F_roller_5_joint>,
+        </traquad/Physics/wheel_3_LEFT_F_roller_6_joint>,
+        </traquad/Physics/wheel_3_LEFT_F_roller_7_joint>,
+        </traquad/Physics/body_right_F_ankle>,
+        </traquad/Physics/joint_wheel_1_RIGHT_F>,
+        </traquad/Physics/joint_wheel_2_RIGHT_F>,
+        </traquad/Physics/joint_wheel_3_RIGHT_F>,
+        </traquad/Physics/joint_wheel_4_RIGHT_F>,
+        </traquad/Physics/wheel_1_RIGHT_F_roller_0_joint>,
+        </traquad/Physics/wheel_1_RIGHT_F_roller_1_joint>,
+        </traquad/Physics/wheel_1_RIGHT_F_roller_2_joint>,
+        </traquad/Physics/wheel_1_RIGHT_F_roller_3_joint>,
+        </traquad/Physics/wheel_1_RIGHT_F_roller_4_joint>,
+        </traquad/Physics/wheel_1_RIGHT_F_roller_5_joint>,
+        </traquad/Physics/wheel_1_RIGHT_F_roller_6_joint>,
+        </traquad/Physics/wheel_1_RIGHT_F_roller_7_joint>,
+        </traquad/Physics/wheel_2_RIGHT_F_roller_0_joint>,
+        </traquad/Physics/wheel_2_RIGHT_F_roller_1_joint>,
+        </traquad/Physics/wheel_2_RIGHT_F_roller_2_joint>,
+        </traquad/Physics/wheel_2_RIGHT_F_roller_3_joint>,
+        </traquad/Physics/wheel_2_RIGHT_F_roller_4_joint>,
+        </traquad/Physics/wheel_2_RIGHT_F_roller_5_joint>,
+        </traquad/Physics/wheel_2_RIGHT_F_roller_6_joint>,
+        </traquad/Physics/wheel_2_RIGHT_F_roller_7_joint>,
+        </traquad/Physics/wheel_3_RIGHT_F_roller_0_joint>,
+        </traquad/Physics/wheel_3_RIGHT_F_roller_1_joint>,
+        </traquad/Physics/wheel_3_RIGHT_F_roller_2_joint>,
+        </traquad/Physics/wheel_3_RIGHT_F_roller_3_joint>,
+        </traquad/Physics/wheel_3_RIGHT_F_roller_4_joint>,
+        </traquad/Physics/wheel_3_RIGHT_F_roller_5_joint>,
+        </traquad/Physics/wheel_3_RIGHT_F_roller_6_joint>,
+        </traquad/Physics/wheel_3_RIGHT_F_roller_7_joint>,
+        </traquad/Physics/body_right_H_ankle>,
+        </traquad/Physics/joint_wheel_1_RIGHT_H>,
+        </traquad/Physics/joint_wheel_2_RIGHT_H>,
+        </traquad/Physics/joint_wheel_3_RIGHT_H>,
+        </traquad/Physics/joint_wheel_4_RIGHT_H>,
+        </traquad/Physics/wheel_1_RIGHT_H_roller_0_joint>,
+        </traquad/Physics/wheel_1_RIGHT_H_roller_1_joint>,
+        </traquad/Physics/wheel_1_RIGHT_H_roller_2_joint>,
+        </traquad/Physics/wheel_1_RIGHT_H_roller_3_joint>,
+        </traquad/Physics/wheel_1_RIGHT_H_roller_4_joint>,
+        </traquad/Physics/wheel_1_RIGHT_H_roller_5_joint>,
+        </traquad/Physics/wheel_1_RIGHT_H_roller_6_joint>,
+        </traquad/Physics/wheel_1_RIGHT_H_roller_7_joint>,
+        </traquad/Physics/wheel_2_RIGHT_H_roller_0_joint>,
+        </traquad/Physics/wheel_2_RIGHT_H_roller_1_joint>,
+        </traquad/Physics/wheel_2_RIGHT_H_roller_2_joint>,
+        </traquad/Physics/wheel_2_RIGHT_H_roller_3_joint>,
+        </traquad/Physics/wheel_2_RIGHT_H_roller_4_joint>,
+        </traquad/Physics/wheel_2_RIGHT_H_roller_5_joint>,
+        </traquad/Physics/wheel_2_RIGHT_H_roller_6_joint>,
+        </traquad/Physics/wheel_2_RIGHT_H_roller_7_joint>,
+        </traquad/Physics/wheel_3_RIGHT_H_roller_0_joint>,
+        </traquad/Physics/wheel_3_RIGHT_H_roller_1_joint>,
+        </traquad/Physics/wheel_3_RIGHT_H_roller_2_joint>,
+        </traquad/Physics/wheel_3_RIGHT_H_roller_3_joint>,
+        </traquad/Physics/wheel_3_RIGHT_H_roller_4_joint>,
+        </traquad/Physics/wheel_3_RIGHT_H_roller_5_joint>,
+        </traquad/Physics/wheel_3_RIGHT_H_roller_6_joint>,
+        </traquad/Physics/wheel_3_RIGHT_H_roller_7_joint>,
+    ]
+    prepend rel isaac:physics:robotLinks = [
+        </traquad/Geometry/base_link>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_1_LEFT_H>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_1_LEFT_H/wheel_1_LEFT_H_roller_0>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_1_LEFT_H/wheel_1_LEFT_H_roller_1>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_1_LEFT_H/wheel_1_LEFT_H_roller_2>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_1_LEFT_H/wheel_1_LEFT_H_roller_3>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_1_LEFT_H/wheel_1_LEFT_H_roller_4>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_1_LEFT_H/wheel_1_LEFT_H_roller_5>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_1_LEFT_H/wheel_1_LEFT_H_roller_6>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_1_LEFT_H/wheel_1_LEFT_H_roller_7>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_2_LEFT_H>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_2_LEFT_H/wheel_2_LEFT_H_roller_0>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_2_LEFT_H/wheel_2_LEFT_H_roller_1>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_2_LEFT_H/wheel_2_LEFT_H_roller_2>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_2_LEFT_H/wheel_2_LEFT_H_roller_3>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_2_LEFT_H/wheel_2_LEFT_H_roller_4>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_2_LEFT_H/wheel_2_LEFT_H_roller_5>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_2_LEFT_H/wheel_2_LEFT_H_roller_6>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_2_LEFT_H/wheel_2_LEFT_H_roller_7>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_3_LEFT_H>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_3_LEFT_H/wheel_3_LEFT_H_roller_0>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_3_LEFT_H/wheel_3_LEFT_H_roller_1>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_3_LEFT_H/wheel_3_LEFT_H_roller_2>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_3_LEFT_H/wheel_3_LEFT_H_roller_3>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_3_LEFT_H/wheel_3_LEFT_H_roller_4>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_3_LEFT_H/wheel_3_LEFT_H_roller_5>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_3_LEFT_H/wheel_3_LEFT_H_roller_6>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_3_LEFT_H/wheel_3_LEFT_H_roller_7>,
+        </traquad/Geometry/base_link/LH_UPPER_LEG/body_left_H/wheel_4_LEFT_H>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_1_LEFT_F>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_1_LEFT_F/wheel_1_LEFT_F_roller_0>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_1_LEFT_F/wheel_1_LEFT_F_roller_1>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_1_LEFT_F/wheel_1_LEFT_F_roller_2>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_1_LEFT_F/wheel_1_LEFT_F_roller_3>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_1_LEFT_F/wheel_1_LEFT_F_roller_4>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_1_LEFT_F/wheel_1_LEFT_F_roller_5>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_1_LEFT_F/wheel_1_LEFT_F_roller_6>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_1_LEFT_F/wheel_1_LEFT_F_roller_7>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_2_LEFT_F>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_2_LEFT_F/wheel_2_LEFT_F_roller_0>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_2_LEFT_F/wheel_2_LEFT_F_roller_1>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_2_LEFT_F/wheel_2_LEFT_F_roller_2>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_2_LEFT_F/wheel_2_LEFT_F_roller_3>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_2_LEFT_F/wheel_2_LEFT_F_roller_4>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_2_LEFT_F/wheel_2_LEFT_F_roller_5>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_2_LEFT_F/wheel_2_LEFT_F_roller_6>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_2_LEFT_F/wheel_2_LEFT_F_roller_7>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_3_LEFT_F>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_3_LEFT_F/wheel_3_LEFT_F_roller_0>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_3_LEFT_F/wheel_3_LEFT_F_roller_1>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_3_LEFT_F/wheel_3_LEFT_F_roller_2>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_3_LEFT_F/wheel_3_LEFT_F_roller_3>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_3_LEFT_F/wheel_3_LEFT_F_roller_4>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_3_LEFT_F/wheel_3_LEFT_F_roller_5>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_3_LEFT_F/wheel_3_LEFT_F_roller_6>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_3_LEFT_F/wheel_3_LEFT_F_roller_7>,
+        </traquad/Geometry/base_link/LF_UPPER_LEG/body_left_F/wheel_4_LEFT_F>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_1_RIGHT_F>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_1_RIGHT_F/wheel_1_RIGHT_F_roller_0>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_1_RIGHT_F/wheel_1_RIGHT_F_roller_1>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_1_RIGHT_F/wheel_1_RIGHT_F_roller_2>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_1_RIGHT_F/wheel_1_RIGHT_F_roller_3>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_1_RIGHT_F/wheel_1_RIGHT_F_roller_4>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_1_RIGHT_F/wheel_1_RIGHT_F_roller_5>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_1_RIGHT_F/wheel_1_RIGHT_F_roller_6>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_1_RIGHT_F/wheel_1_RIGHT_F_roller_7>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_2_RIGHT_F>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_2_RIGHT_F/wheel_2_RIGHT_F_roller_0>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_2_RIGHT_F/wheel_2_RIGHT_F_roller_1>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_2_RIGHT_F/wheel_2_RIGHT_F_roller_2>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_2_RIGHT_F/wheel_2_RIGHT_F_roller_3>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_2_RIGHT_F/wheel_2_RIGHT_F_roller_4>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_2_RIGHT_F/wheel_2_RIGHT_F_roller_5>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_2_RIGHT_F/wheel_2_RIGHT_F_roller_6>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_2_RIGHT_F/wheel_2_RIGHT_F_roller_7>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_3_RIGHT_F>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_3_RIGHT_F/wheel_3_RIGHT_F_roller_0>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_3_RIGHT_F/wheel_3_RIGHT_F_roller_1>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_3_RIGHT_F/wheel_3_RIGHT_F_roller_2>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_3_RIGHT_F/wheel_3_RIGHT_F_roller_3>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_3_RIGHT_F/wheel_3_RIGHT_F_roller_4>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_3_RIGHT_F/wheel_3_RIGHT_F_roller_5>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_3_RIGHT_F/wheel_3_RIGHT_F_roller_6>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_3_RIGHT_F/wheel_3_RIGHT_F_roller_7>,
+        </traquad/Geometry/base_link/RF_UPPER_LEG/body_right_F/wheel_4_RIGHT_F>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_1_RIGHT_H>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_1_RIGHT_H/wheel_1_RIGHT_H_roller_0>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_1_RIGHT_H/wheel_1_RIGHT_H_roller_1>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_1_RIGHT_H/wheel_1_RIGHT_H_roller_2>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_1_RIGHT_H/wheel_1_RIGHT_H_roller_3>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_1_RIGHT_H/wheel_1_RIGHT_H_roller_4>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_1_RIGHT_H/wheel_1_RIGHT_H_roller_5>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_1_RIGHT_H/wheel_1_RIGHT_H_roller_6>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_1_RIGHT_H/wheel_1_RIGHT_H_roller_7>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_2_RIGHT_H>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_2_RIGHT_H/wheel_2_RIGHT_H_roller_0>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_2_RIGHT_H/wheel_2_RIGHT_H_roller_1>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_2_RIGHT_H/wheel_2_RIGHT_H_roller_2>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_2_RIGHT_H/wheel_2_RIGHT_H_roller_3>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_2_RIGHT_H/wheel_2_RIGHT_H_roller_4>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_2_RIGHT_H/wheel_2_RIGHT_H_roller_5>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_2_RIGHT_H/wheel_2_RIGHT_H_roller_6>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_2_RIGHT_H/wheel_2_RIGHT_H_roller_7>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_3_RIGHT_H>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_3_RIGHT_H/wheel_3_RIGHT_H_roller_0>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_3_RIGHT_H/wheel_3_RIGHT_H_roller_1>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_3_RIGHT_H/wheel_3_RIGHT_H_roller_2>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_3_RIGHT_H/wheel_3_RIGHT_H_roller_3>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_3_RIGHT_H/wheel_3_RIGHT_H_roller_4>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_3_RIGHT_H/wheel_3_RIGHT_H_roller_5>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_3_RIGHT_H/wheel_3_RIGHT_H_roller_6>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_3_RIGHT_H/wheel_3_RIGHT_H_roller_7>,
+        </traquad/Geometry/base_link/RH_UPPER_LEG/body_right_H/wheel_4_RIGHT_H>,
+    ]
+    token isaac:robotType = "Default"
+
+    over "Geometry"
+    {
+        over "base_link" (
+            prepend apiSchemas = ["IsaacLinkAPI"]
+        )
+        {
+            over "LH_UPPER_LEG" (
+                prepend apiSchemas = ["IsaacLinkAPI"]
+            )
+            {
+                over "body_left_H" (
+                    prepend apiSchemas = ["IsaacLinkAPI"]
+                )
+                {
+                    over "wheel_1_LEFT_H" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_1_LEFT_H_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_H_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_H_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_H_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_H_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_H_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_H_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_H_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_2_LEFT_H" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_2_LEFT_H_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_H_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_H_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_H_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_H_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_H_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_H_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_H_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_3_LEFT_H" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_3_LEFT_H_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_H_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_H_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_H_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_H_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_H_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_H_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_H_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_4_LEFT_H" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                    }
+                }
+            }
+
+            over "LF_UPPER_LEG" (
+                prepend apiSchemas = ["IsaacLinkAPI"]
+            )
+            {
+                over "body_left_F" (
+                    prepend apiSchemas = ["IsaacLinkAPI"]
+                )
+                {
+                    over "wheel_1_LEFT_F" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_1_LEFT_F_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_F_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_F_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_F_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_F_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_F_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_F_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_LEFT_F_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_2_LEFT_F" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_2_LEFT_F_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_F_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_F_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_F_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_F_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_F_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_F_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_LEFT_F_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_3_LEFT_F" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_3_LEFT_F_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_F_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_F_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_F_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_F_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_F_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_F_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_LEFT_F_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_4_LEFT_F" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                    }
+                }
+            }
+
+            over "RF_UPPER_LEG" (
+                prepend apiSchemas = ["IsaacLinkAPI"]
+            )
+            {
+                over "body_right_F" (
+                    prepend apiSchemas = ["IsaacLinkAPI"]
+                )
+                {
+                    over "wheel_1_RIGHT_F" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_1_RIGHT_F_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_F_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_F_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_F_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_F_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_F_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_F_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_F_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_2_RIGHT_F" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_2_RIGHT_F_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_F_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_F_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_F_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_F_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_F_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_F_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_F_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_3_RIGHT_F" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_3_RIGHT_F_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_F_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_F_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_F_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_F_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_F_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_F_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_F_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_4_RIGHT_F" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                    }
+                }
+            }
+
+            over "RH_UPPER_LEG" (
+                prepend apiSchemas = ["IsaacLinkAPI"]
+            )
+            {
+                over "body_right_H" (
+                    prepend apiSchemas = ["IsaacLinkAPI"]
+                )
+                {
+                    over "wheel_1_RIGHT_H" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_1_RIGHT_H_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_H_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_H_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_H_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_H_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_H_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_H_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_1_RIGHT_H_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_2_RIGHT_H" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_2_RIGHT_H_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_H_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_H_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_H_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_H_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_H_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_H_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_2_RIGHT_H_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_3_RIGHT_H" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "wheel_3_RIGHT_H_roller_0" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_H_roller_1" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_H_roller_2" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_H_roller_3" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_H_roller_4" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_H_roller_5" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_H_roller_6" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+
+                        over "wheel_3_RIGHT_H_roller_7" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                        }
+                    }
+
+                    over "wheel_4_RIGHT_H" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                    }
+                }
+            }
+        }
+    }
+
+    over "Physics"
+    {
+        over "body_left_H_ankle" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_LEFT_H" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_LEFT_H" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_LEFT_H" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_LEFT_H" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "body_left_F_ankle" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_LEFT_F" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_LEFT_F" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_LEFT_F" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_LEFT_F" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "body_right_F_ankle" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_RIGHT_F" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_RIGHT_F" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_RIGHT_F" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_RIGHT_F" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "body_right_H_ankle" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_RIGHT_H" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_RIGHT_H" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_RIGHT_H" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_0_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_1_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_2_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_3_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_4_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_5_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_6_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_7_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_RIGHT_H" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "LH_HFE" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "LF_HFE" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "RF_HFE" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "RH_HFE" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+    }
+}
+

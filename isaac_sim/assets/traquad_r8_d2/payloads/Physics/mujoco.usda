@@ -1,0 +1,1822 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.3.2"
+    }
+    defaultPrim = "traquad"
+    endTimeCode = 1000000
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    startTimeCode = 0
+    subLayers = [
+        @./physics.usda@
+    ]
+    upAxis = "Z"
+)
+
+over "traquad"
+{
+    over "Physics"
+    {
+        over "body_left_H_ankle" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_LEFT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_H_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_LEFT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_H_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_LEFT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_H_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_LEFT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "body_left_F_ankle" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_LEFT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_LEFT_F_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_LEFT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_LEFT_F_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_LEFT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_LEFT_F_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_LEFT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "body_right_F_ankle" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_RIGHT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_F_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_RIGHT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_F_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_RIGHT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_F_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_RIGHT_F" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "body_right_H_ankle" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_1_RIGHT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_1_RIGHT_H_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_2_RIGHT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_2_RIGHT_H_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_3_RIGHT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_0_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_1_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_2_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_3_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_4_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_5_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_6_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "wheel_3_RIGHT_H_roller_7_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "joint_wheel_4_RIGHT_H" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "LH_HFE" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "LF_HFE" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "RF_HFE" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        over "RH_HFE" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+            prepend apiSchemas = ["MjcJointAPI"]
+        )
+        {
+        }
+
+        def MjcActuator "body_left_H_ankle_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/body_left_H_ankle>
+        }
+
+        def MjcActuator "joint_wheel_1_LEFT_H_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_1_LEFT_H>
+        }
+
+        def MjcActuator "wheel_1_LEFT_H_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_H_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_H_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_H_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_H_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_H_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_H_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_H_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_H_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_H_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_H_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_H_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_H_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_H_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_H_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_H_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_2_LEFT_H_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_2_LEFT_H>
+        }
+
+        def MjcActuator "wheel_2_LEFT_H_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_H_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_H_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_H_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_H_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_H_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_H_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_H_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_H_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_H_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_H_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_H_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_H_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_H_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_H_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_H_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_3_LEFT_H_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_3_LEFT_H>
+        }
+
+        def MjcActuator "wheel_3_LEFT_H_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_H_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_H_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_H_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_H_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_H_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_H_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_H_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_H_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_H_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_H_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_H_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_H_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_H_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_H_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_H_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_4_LEFT_H_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_4_LEFT_H>
+        }
+
+        def MjcActuator "body_left_F_ankle_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/body_left_F_ankle>
+        }
+
+        def MjcActuator "joint_wheel_1_LEFT_F_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_1_LEFT_F>
+        }
+
+        def MjcActuator "wheel_1_LEFT_F_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_F_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_F_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_F_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_F_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_F_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_F_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_F_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_F_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_F_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_F_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_F_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_F_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_F_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_1_LEFT_F_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_LEFT_F_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_2_LEFT_F_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_2_LEFT_F>
+        }
+
+        def MjcActuator "wheel_2_LEFT_F_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_F_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_F_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_F_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_F_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_F_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_F_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_F_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_F_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_F_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_F_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_F_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_F_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_F_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_2_LEFT_F_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_LEFT_F_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_3_LEFT_F_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_3_LEFT_F>
+        }
+
+        def MjcActuator "wheel_3_LEFT_F_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_F_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_F_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_F_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_F_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_F_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_F_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_F_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_F_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_F_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_F_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_F_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_F_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_F_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_3_LEFT_F_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_LEFT_F_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_4_LEFT_F_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_4_LEFT_F>
+        }
+
+        def MjcActuator "body_right_F_ankle_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/body_right_F_ankle>
+        }
+
+        def MjcActuator "joint_wheel_1_RIGHT_F_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_1_RIGHT_F>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_F_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_F_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_F_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_F_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_F_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_F_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_F_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_F_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_F_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_F_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_F_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_F_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_F_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_F_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_F_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_F_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_2_RIGHT_F_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_2_RIGHT_F>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_F_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_F_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_F_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_F_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_F_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_F_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_F_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_F_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_F_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_F_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_F_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_F_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_F_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_F_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_F_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_F_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_3_RIGHT_F_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_3_RIGHT_F>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_F_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_F_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_F_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_F_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_F_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_F_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_F_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_F_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_F_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_F_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_F_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_F_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_F_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_F_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_F_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_F_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_4_RIGHT_F_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_4_RIGHT_F>
+        }
+
+        def MjcActuator "body_right_H_ankle_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/body_right_H_ankle>
+        }
+
+        def MjcActuator "joint_wheel_1_RIGHT_H_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_1_RIGHT_H>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_H_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_H_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_H_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_H_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_H_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_H_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_H_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_H_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_H_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_H_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_H_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_H_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_H_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_H_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_1_RIGHT_H_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_1_RIGHT_H_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_2_RIGHT_H_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_2_RIGHT_H>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_H_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_H_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_H_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_H_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_H_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_H_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_H_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_H_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_H_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_H_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_H_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_H_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_H_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_H_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_2_RIGHT_H_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_2_RIGHT_H_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_3_RIGHT_H_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_3_RIGHT_H>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_H_roller_0_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_H_roller_0_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_H_roller_1_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_H_roller_1_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_H_roller_2_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_H_roller_2_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_H_roller_3_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_H_roller_3_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_H_roller_4_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_H_roller_4_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_H_roller_5_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_H_roller_5_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_H_roller_6_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_H_roller_6_joint>
+        }
+
+        def MjcActuator "wheel_3_RIGHT_H_roller_7_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = inf
+            uniform double mjc:forceRange:min = -inf
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/wheel_3_RIGHT_H_roller_7_joint>
+        }
+
+        def MjcActuator "joint_wheel_4_RIGHT_H_actuator"
+        {
+            uniform double mjc:forceRange:max = 10
+            uniform double mjc:forceRange:min = -10
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/joint_wheel_4_RIGHT_H>
+        }
+
+        def MjcActuator "LH_HFE_actuator"
+        {
+            uniform double mjc:forceRange:max = 5
+            uniform double mjc:forceRange:min = -5
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/LH_HFE>
+        }
+
+        def MjcActuator "LF_HFE_actuator"
+        {
+            uniform double mjc:forceRange:max = 5
+            uniform double mjc:forceRange:min = -5
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/LF_HFE>
+        }
+
+        def MjcActuator "RF_HFE_actuator"
+        {
+            uniform double mjc:forceRange:max = 5
+            uniform double mjc:forceRange:min = -5
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/RF_HFE>
+        }
+
+        def MjcActuator "RH_HFE_actuator"
+        {
+            uniform double mjc:forceRange:max = 5
+            uniform double mjc:forceRange:min = -5
+            custom rel mjc:target
+            append rel mjc:target = </traquad/Physics/RH_HFE>
+        }
+    }
+}
+
