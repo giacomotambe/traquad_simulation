@@ -64,6 +64,13 @@ SPROCKET_RADIUS = 0.028
 """Radius of the drive sprocket on the ankle axis [m]: belt speed per rad/s of the track joint, ``wheel_rad`` of the
 differential IK of the real robot (mulsbc_ws traquad8_dji.yaml). 25 mm was the smallest value that climbs 35 deg at
 mu 0.75 without tipping the tracks."""
+HIP_MAX_TORQUE = 10.0
+"""Torque limit of a hip motor [N m] (not from the robot: raised from 5 N m, which saturated in training). Hips and tracks
+use the same actuator (same K_t), with moteus max_current_A 80 / 40 A and gear ratio 9 / 15 (mulsbc_ws
+traquad8_dji.xacro): set it from K_t x 80 A x 9 when K_t is known."""
+TRACK_MAX_TORQUE = HIP_MAX_TORQUE * (40.0 * 15.0) / (80.0 * 9.0)
+"""Torque limit of a track motor at the sprocket [N m]: same actuator as the hips, 40 A x gear 15 against 80 A x gear 9,
+0.83 x HIP_MAX_TORQUE."""
 ANKLE_PASSIVE_DAMPING = 0.01
 """Passive viscous damping of the ankle pivot [N m s/rad] (same value as the USD ankle drive)."""
 ANKLE_SPEED_GAIN = 0.2
@@ -123,20 +130,19 @@ TRAQUAD_CFG = ArticulationCfg(
     actuators={
         "legs": ImplicitActuatorCfg(
             joint_names_expr=[".*HFE"],
-            # hip motor limit raised from 5 N m (Gazebo value): the hips saturated in the first trainings
-            joint_effort_limit=10.0,
+            joint_effort_limit=HIP_MAX_TORQUE,
             # real robot (mulsbc_ws traquad8_dji.xacro, joint units): moteus max_velocity 10 rad/s, Kp 60, Kd 0.6
             joint_velocity_limit=10.0,
             stiffness=60.0,
             damping=0.6,
         ),
         # velocity control: zero stiffness, the damping is the velocity gain. Track motor (same as
-        # isaac_sim/finalize_usd.py): 1.5 Nm per track at r = 15 mm (100 N of belt force), split over its 4 wheels.
+        # isaac_sim/finalize_usd.py): TRACK_MAX_TORQUE at the sprocket, referred to the 15 mm wheels and split over 4.
         # Velocity gain of the real track joint, Kd 0.9 N m s/rad at the sprocket (moteus, Kp 0), referred to the
         # wheels: 0.9 * (WHEEL_RADIUS / SPROCKET_RADIUS)^2 / 4 per wheel (the same belt force per m/s of speed error)
         "wheels": ImplicitActuatorCfg(
             joint_names_expr=["joint_wheel_.*"],
-            joint_effort_limit=0.375,
+            joint_effort_limit=TRACK_MAX_TORQUE * WHEEL_RADIUS / SPROCKET_RADIUS / 4,
             joint_velocity_limit=200.0,
             stiffness=0.0,
             damping=0.9 * (WHEEL_RADIUS / SPROCKET_RADIUS) ** 2 / 4,
@@ -149,8 +155,8 @@ TRAQUAD_CFG = ArticulationCfg(
             joint_names_expr=["body_.*_ankle"],
             stiffness=0.0,
             damping=0.0,
-            # the PI is clipped to ANKLE_MAX_TORQUE by the action; the sprocket torque can reach about 2.5 N m
-            actuator_effort_limit=5.0,
+            # the PI is clipped to ANKLE_MAX_TORQUE by the action; the sprocket torque reaches TRACK_MAX_TORQUE
+            actuator_effort_limit=1.2 * TRACK_MAX_TORQUE,
             joint_velocity_limit=100.0,
             viscous_friction=ANKLE_PASSIVE_DAMPING,
         ),
@@ -174,7 +180,7 @@ TRAQUAD_CYLINDER_CFG = replace(
         # only wheel 2 of each track is driven: the whole track motor on it
         "wheels": ImplicitActuatorCfg(
             joint_names_expr=["joint_wheel_2_.*"],
-            joint_effort_limit=1.5,
+            joint_effort_limit=TRACK_MAX_TORQUE * WHEEL_RADIUS / SPROCKET_RADIUS,
             joint_velocity_limit=200.0,
             stiffness=0.0,
             damping=0.9 * (WHEEL_RADIUS / SPROCKET_RADIUS) ** 2,

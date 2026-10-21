@@ -55,8 +55,9 @@ parser.add_argument("--ground_friction", type=float, default=0.6, help="Friction
 parser.add_argument(
     "--track_max_torque",
     type=float,
-    default=1.5,
-    help="Torque limit of a track motor [Nm at r = 15 mm] (1.5 Nm = 100 N of belt force).",
+    default=10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.028,
+    help="Torque limit of a track motor [Nm at r = 15 mm]: same actuator as the hips (10 Nm), 40 A x gear 15 against "
+    "80 A x gear 9, i.e. 0.83 x 10 Nm at the 28 mm sprocket (4.46 Nm = 298 N of belt force).",
 )
 parser.add_argument(
     "--ankle_stiffness",
@@ -227,8 +228,8 @@ def make_actuators_cfg():
                 joint_names_expr=["body_.*_ankle"],
                 stiffness=0.0,
                 damping=0.0,
-                # the PI is clipped to ANKLE_MAX_TORQUE below; the sprocket torque can reach about 2.5 N m
-                actuator_effort_limit=5.0,
+                # the PI is clipped to ANKLE_MAX_TORQUE below; the sprocket torque reaches 0.83 x 10 N m
+                actuator_effort_limit=10.0,
                 joint_velocity_limit=100.0,
                 viscous_friction=ANKLE_PASSIVE_DAMPING,
             )

@@ -94,7 +94,7 @@ rollers = [i for n, i in idx.items() if '_roller_' in n]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
 kp[hfe] = 60.0; kd[hfe] = 0.6; fmax[hfe] = 10.0
 kd[ankles] = 0.01   # passive ankles (asset value): parked, the tracks touch the ground
-kd[wheels] = 0.9 * (0.015 / 0.028) ** 2 / 4; fmax[wheels] = 0.375   # parked: real track velocity gain (Kd 0.9 at the 28 mm sprocket)
+kd[wheels] = 0.9 * (0.015 / 0.028) ** 2 / 4; fmax[wheels] = 10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.028 / 4   # track limit 0.83 x hip 10 N m at the sprocket; parked: real track velocity gain (Kd 0.9 at the 28 mm sprocket)
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
 robot.set_dof_max_efforts(fmax[None])

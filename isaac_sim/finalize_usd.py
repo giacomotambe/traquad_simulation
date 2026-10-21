@@ -3,8 +3,8 @@ in Isaac Sim / Isaac Lab (Isaac Lab actuators still override the joints they con
 
 - Physics variant set to 'physx' (the importer leaves it unselected: no physics otherwise)
 - articulation self-collisions off
-- HFE: PD drive Kp 60 Nm/rad, Kd 0.6 Nm s/rad (real robot, mulsbc_ws traquad8_dji.xacro), max 10 Nm (to be checked
-  against the real hip motor)
+- HFE: PD drive Kp 60 Nm/rad, Kd 0.6 Nm s/rad (real robot, mulsbc_ws traquad8_dji.xacro), max --hip_max_torque
+  (10 Nm, to be set from the motor K_t x 80 A x gear 9)
 - ankles: passive damping 0.01 Nm s/rad. The controllers (Isaac Lab action, isaac_sim/ankle_control.py) add a
   velocity control of the ankle when the track is in the air: the frame turns with the drive sprocket
 - driven wheels: velocity drive (stiffness 0), armature --wheel_armature. The motor of a track is described at the
@@ -32,16 +32,21 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--usd', required=True)
 parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--roller_friction', type=float, default=0.06)
-# track motor: 1.5 Nm per track. Velocity gain of the real robot (moteus Kd 0.9 N m s/rad at the sprocket, Kp 0): about
+# hips and tracks use the same actuator (same K_t): moteus max_current_A 80 / 40 A, gear 9 / 15, so the track motor
+# gives 40 x 15 / (80 x 9) = 0.83 times the hip torque at the sprocket. Velocity gain of the real robot (moteus Kd 0.9 N m s/rad at the sprocket, Kp 0): about
 # 8 times lower than the 2 Nm s/rad used before, it leaves the tracks behind their target under load (the simulated
 # rotation in place drops from about 95% to 60% of the command)
-parser.add_argument('--track_max_torque', type=float, default=1.5,
-                    help='torque limit of a track [Nm at r 15 mm] (1.5 Nm = 100 N of belt force)')
+parser.add_argument('--hip_max_torque', type=float, default=10.0, help='torque limit of a hip motor [Nm]')
+parser.add_argument('--track_max_torque', type=float, default=None,
+                    help='torque limit of a track [Nm at r 15 mm] (default: 0.83 x hip limit at the 28 mm sprocket, '
+                         '4.46 Nm = 298 N of belt force with 10 Nm)')
 parser.add_argument('--track_damping', type=float, default=0.9 * (0.015 / 0.028) ** 2,
                     help='velocity gain of a track [Nm s/rad]: real Kd 0.9 at the 28 mm sprocket referred to the 15 mm wheels')
 parser.add_argument('--wheel_armature', type=float, default=0.001, help='armature of each driven wheel [kg m^2]')
 parser.add_argument('--contact_offset', type=float, default=0.003, help='wheels, rollers and track bodies [m]')
 args, _ = parser.parse_known_args()
+if args.track_max_torque is None:
+    args.track_max_torque = args.hip_max_torque * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.028
 
 from isaacsim import SimulationApp  # noqa: E402
 
@@ -111,7 +116,7 @@ for prim in stage.Traverse():
     if not prim.IsA(UsdPhysics.RevoluteJoint):
         continue
     if name.endswith('_HFE'):
-        drive(prim, 60.0, 0.6, 10.0); counts['hfe'] += 1
+        drive(prim, 60.0, 0.6, args.hip_max_torque); counts['hfe'] += 1
     elif path in mimic_of:
         # follower wheel: moved by the mimic constraint only
         prim.RemoveAPI(UsdPhysics.DriveAPI, 'angular')

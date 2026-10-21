@@ -12,9 +12,11 @@ ready for Isaac Sim / Isaac Lab (`sim_utils.UsdFileCfg(usd_path=...)`; used by `
 - Default drives written in the file: HFE PD Kp 60 / Kd 0.6 (real robot, mulsbc_ws traquad8_dji.xacro), max 10 Nm; ankles passive damping 0.01 Nm s/rad, end
   stops +-30 deg around the flat pose of the default stance (HFE +-1.47, ankle +-0.1008); **rollers passive, damping
   1e-4 Nm s/rad, dry friction 0.06 Nm**; wheels velocity drive with the track motor split over the 4 wheels of a track:
-  **1.5 Nm per track at r = 15 mm (`--track_max_torque`) and the real velocity gain, Kd 0.9 N m s/rad at the 28 mm
-  sprocket referred to the wheels (`--track_damping` 0.9 (15/28)^2 = 0.26 per track)**, i.e. 0.375 Nm and
-  0.065 Nm s/rad per wheel, armature 0.001 (1.5 Nm = 100 N of belt force).
+  **torque limit 0.83 x the hip limit at the 28 mm sprocket (hips and tracks use the same actuator: moteus 40 A x gear
+  15 against 80 A x gear 9), 8.3 Nm with the 10 Nm hips = 4.46 Nm per track at r = 15 mm (`--track_max_torque`,
+  298 N of belt force), and the real velocity gain, Kd 0.9 N m s/rad at the sprocket referred to the wheels
+  (`--track_damping` 0.9 (15/28)^2 = 0.26 per track)**, i.e. 1.12 Nm and 0.065 Nm s/rad per wheel, armature 0.001.
+  The hip limit (10 Nm, `--hip_max_torque`) is not from the robot: set it from K_t x 80 A x 9 when K_t is known.
 - Ankle control (not in the file, added by the controllers: `ankle_control.py` here, the track action in Isaac Lab,
   `../open_traquad.py`): the drive sprocket (radius r_s = 28 mm, wheel_rad of the robot IK) is coaxial with the ankle. Track touching
   the ground: the ankle gets the torque the sprocket puts on the track, (r_s / r_wheel) x the drive torque of the track
@@ -105,7 +107,7 @@ if it does not exist, `isaac.sh` uses the python of the active environment when 
 
 - PhysX, 1 ms step (`--dt`), TGS solver, CPU; ground is a collision plane; isotropic friction `--mu` (0.6) on ground
   and robot.
-- HFE: PD Kp = 100, Kd = 10, max 10 Nm, stance `--hfe` (1.47, default stance; 1.13 in the earlier tests). Wheels:
+- HFE: PD Kp = 60, Kd = 0.6, max 10 Nm, stance `--hfe` (1.47, default stance; 1.13 in the earlier tests). Wheels:
   velocity drive and torque limit from the USD (`--wheel_max` per wheel). Ankles: passive damping 0.01 plus the
   ankle controller in the air (`--no_coupling`: passive only). Rollers: damping `--damping`, dry friction
   `--roller_friction` (default: USD).
@@ -185,10 +187,16 @@ exceeds tau / r_roller, so the robot holds lateral forces up to about 12 * tau /
   the robot, the grip comes from mu.
 - Current model, 8.0 kg, 5 ms (2026-10-20). Flat (`track_test.py`): yaw 63% in place / 64% in the turn at mu 0.75
   (54/53% mu 0.6, 67/67% mu 1.0; 1 ms 61/56%), straight 0.196 m/s of 0.2, hips at most 5.9 Nm, no ankle on a stop,
-  track torque about 11% of the limit while turning: the limit is the speed loop (Kd 0.9, Kp 0). Slopes (`--slope`):
+  track torque about 11% of the old limit while turning: the limit is the speed loop (Kd 0.9, Kp 0). Slopes (`--slope`):
   35 deg climbed at 0.08 m/s (mu 0.75) and 0.16 m/s (mu 1.0); stopped, it slides back 0.4-0.6 m in 1.5 s, then creeps
   1-2 cm/s; 30 deg at mu 0.6 is marginal (0.06 m/s, -0.54 m). Parked at mu 0.75: holds 40 N side push (creeps at 50 N,
   slides at 60 N) and 30 deg side slope (slides at 35 deg).
+- Track torque tied to the hip torque (0.83 x hip, 2026-10-21; before: 1.5 Nm per track at r 15 mm). Flat and parked
+  unchanged (track torque 3-4% of the new limit while turning). Mu 0.6: slopes 15 / 20 / 25 / 30 deg climbed at 0.19 /
+  0.17 / 0.12 / 0.07 m/s, slide-back after stopping 0 / -0.02 / -0.22 / -0.79 m, creep -1 / -2 / -27 / -63 mm/s
+  (30 deg is marginal and changes with small details). 35 deg: 0.07 m/s at mu 0.75 (was 0.08), 0.13 m/s at mu 1.0 (was
+  0.16), slide-back -0.47 / -0.29 m (was -0.56 / -0.39). Parked at mu 0.6: holds 45 N (slides at 50 N, mu m g = 47 N)
+  and 20 deg (creeps 2-4 mm/s at 25-28 deg, slides from 30 deg).
 - The scripts of this folder use the current model: HFE PD 60 / 0.6, real track velocity gain, passive ankles (damping 0.01), real mass 8.0 kg (weighed 2026-10-20);
   `--roller_friction` is always applied (default 0.06, the asset value; 0 removes it). `video_replica.py` also
   handles the cylinder model (only the driven wheels are commanded) and logs velocities with `--csv`.

@@ -288,7 +288,7 @@ def Xform "traquad" (
         )
         {
             float drive:angular:physics:damping = 0.004508025
-            float drive:angular:physics:maxForce = 1.5
+            float drive:angular:physics:maxForce = 4.464286
             float drive:angular:physics:stiffness = 0
             float drive:angular:physics:targetPosition = 0
             float drive:angular:physics:targetVelocity = 0
@@ -339,7 +339,7 @@ def Xform "traquad" (
         )
         {
             float drive:angular:physics:damping = 0.004508025
-            float drive:angular:physics:maxForce = 1.5
+            float drive:angular:physics:maxForce = 4.464286
             float drive:angular:physics:stiffness = 0
             float drive:angular:physics:targetPosition = 0
             float drive:angular:physics:targetVelocity = 0
@@ -390,7 +390,7 @@ def Xform "traquad" (
         )
         {
             float drive:angular:physics:damping = 0.004508025
-            float drive:angular:physics:maxForce = 1.5
+            float drive:angular:physics:maxForce = 4.464286
             float drive:angular:physics:stiffness = 0
             float drive:angular:physics:targetPosition = 0
             float drive:angular:physics:targetVelocity = 0
@@ -441,7 +441,7 @@ def Xform "traquad" (
         )
         {
             float drive:angular:physics:damping = 0.004508025
-            float drive:angular:physics:maxForce = 1.5
+            float drive:angular:physics:maxForce = 4.464286
             float drive:angular:physics:stiffness = 0
             float drive:angular:physics:targetPosition = 0
             float drive:angular:physics:targetVelocity = 0

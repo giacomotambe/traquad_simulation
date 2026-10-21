@@ -2,7 +2,7 @@
 
 Frames are saved as PNG named by simulated time, with the command and the measured body velocities
 written on them. Works with both track models: with the cylinder model only the driven wheels (wheel 2, not
-the mimic followers) are commanded. Track motor as in open_traquad.py: 1.5 Nm and the real velocity gain (Kd 0.9 at the 28 mm sprocket) per track, split over
+the mimic followers) are commanded. Track motor as in open_traquad.py: 0.83 x the 10 Nm hip limit at the sprocket and the real velocity gain (Kd 0.9 at the 28 mm sprocket) per track, split over
 its driven wheels. --csv logs command and measured velocities of every frame.
 usage: ./isaac.sh video_replica.py --usd <robot.usda> --out <frames_dir> [--roller_damping 1e-4] [--csv log.csv]
 """
@@ -18,7 +18,8 @@ parser.add_argument('--out', required=True)
 parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--roller_friction', type=float, default=0.06, help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.06 = asset value)')
 parser.add_argument('--track_width', type=float, default=0.4)
-parser.add_argument('--track_max_torque', type=float, default=1.5, help='torque limit of a track motor [N m at r 15 mm]')
+parser.add_argument('--track_max_torque', type=float, default=10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.028,
+                    help='torque limit of a track motor [N m at r 15 mm] (0.83 x the 10 N m hip limit at the sprocket)')
 parser.add_argument('--mu', type=float, default=0.6,
                     help='friction of ground and robot, same material on both (default 0.6: static friction measured for the tracks on the lab rubber mat)')
 parser.add_argument('--slope', type=float, default=None,

@@ -4,7 +4,7 @@
         string creator = "URDF USD Converter v0.3.2"
     }
     defaultPrim = "traquad"
-    doc = """Generated from Composed Stage of root layer /tmp/tmp.aBtGK2ecW6/usd/traquad/payloads/base.usd
+    doc = """Generated from Composed Stage of root layer /tmp/tmp.HSI9rskBas/usd/traquad/payloads/base.usd
 """
     endTimeCode = 1000000
     kilogramsPerUnit = 1

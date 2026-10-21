@@ -117,8 +117,8 @@ wheels = [i for n, i in idx.items() if n.startswith('joint_wheel_')]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
 kp[hfe] = 1e4; kd[hfe] = 100.0                      # hips locked
 kd[ankles] = PASSIVE_DAMPING if args.ankle_damping is None else args.ankle_damping   # passive ankles
-ankle_ctrl = AnkleController(robot, enabled=not args.no_control, wheel_kd=0.9 * (0.015 / 0.028) ** 2 / 4, wheel_max=0.375)
-kd[wheels] = 0.9 * (0.015 / 0.028) ** 2 / 4; fmax[wheels] = 0.375   # track motor: 1.5 N m per track, real velocity gain
+ankle_ctrl = AnkleController(robot, enabled=not args.no_control, wheel_kd=0.9 * (0.015 / 0.028) ** 2 / 4, wheel_max=10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.028 / 4)
+kd[wheels] = 0.9 * (0.015 / 0.028) ** 2 / 4; fmax[wheels] = 10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.028 / 4   # track motor: 0.83 x the 10 N m hip limit at the sprocket, real velocity gain
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
 robot.set_dof_max_efforts(fmax[None])
 q0 = np.zeros(N, np.float32)
