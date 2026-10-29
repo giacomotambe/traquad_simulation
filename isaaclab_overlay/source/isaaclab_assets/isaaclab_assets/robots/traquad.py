@@ -8,8 +8,6 @@
 The following configuration parameters are available:
 
 * :obj:`TRAQUAD_CFG`: TraQuad with roller wheels and real masses (8.0 kg)
-* :obj:`TRAQUAD_CYLINDER_CFG`: TraQuad with plain cylinder wheels: wheel 2 of each track is driven, wheels 1, 3, 4
-  follow it through mimic joints
 
 The USD is the instanceable asset of the traquad_simulation repository (``isaac_sim/assets/traquad``, rebuilt from
 the xacro by ``isaac_sim/make_isaac_asset.sh``); the ``TRAQUAD_USD`` environment variable overrides its path.
@@ -28,9 +26,8 @@ import os
 from isaaclab_physx.sim.schemas import PhysxArticulationCfg, PhysxRigidBodyCfg
 
 import isaaclab.sim as sim_utils
-from isaaclab.actuators import IdealPDActuatorCfg, ImplicitActuatorCfg
+from isaaclab.actuators import ImplicitActuatorCfg
 from isaaclab.assets.articulation import ArticulationCfg
-from isaaclab.utils import replace
 
 # isaaclab_traquad/source/isaaclab_assets/isaaclab_assets/robots/traquad.py -> traquad_simulation
 _REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), *[os.pardir] * 5))
@@ -38,8 +35,6 @@ TRAQUAD_USD_PATH = os.environ.get(
     "TRAQUAD_USD", os.path.join(_REPO_DIR, "isaac_sim", "assets", "traquad", "traquad.usda")
 )
 """Path of the TraQuad USD (roller wheels)."""
-TRAQUAD_CYLINDER_USD_PATH = os.path.join(_REPO_DIR, "isaac_sim", "assets", "traquad_cylinder", "traquad.usda")
-"""Path of the TraQuad USD with cylinder wheels (``TRACK_MODEL=cylinder isaac_sim/make_isaac_asset.sh``)."""
 
 ##
 # Ankle model
@@ -51,19 +46,27 @@ TRAQUAD_CYLINDER_USD_PATH = os.path.join(_REPO_DIR, "isaac_sim", "assets", "traq
 # track wheels and its reaction stays in the track frame, so the track action applies to the ankle the torque the
 # sprocket puts on the track, (SPROCKET_RADIUS / WHEEL_RADIUS) x the drive torque of the track wheels. Without it the
 # traction pitches the track with F * h instead of F * (h - r_s), and the tracks tip on slopes the real robot climbs
-# (35 deg on wood). In the air belt and frame turn with the sprocket: the track action then also
-# velocity-controls the ankle at the speed that gives the commanded belt speed, w_target = v / SPROCKET_RADIUS, with a
-# PI controller (the integral removes the steady error due to gravity: the track keeps turning at w_target, however
-# small, until an end stop):
-#   tau_ankle = clip(ANKLE_SPEED_GAIN * e + ANKLE_INTEGRAL_GAIN * int(e dt), +-ANKLE_MAX_TORQUE),  e = w_target - dq
-#   tau_ankle = sprocket torque and integral reset when a body of the track touches something (contact sensor)
-# plus a passive viscous damping ANKLE_PASSIVE_DAMPING, always (physics solver).
+# (35 deg on wood). In the air belt and frame turn with the sprocket: the track action then drives the ankle with the
+# controller of the track and the same speed command, w_target = v / SPROCKET_RADIUS: the track Kd as damping of the
+# implicit ankle drive (ANKLE_SPEED_GAIN, velocity target w_target) and the integral of the wheel compensation of the
+# robot (ANKLE_INTEGRAL_GAIN, limited to +-ANKLE_MAX_TORQUE) as effort. On the ground (contact sensor) the drive goes
+# back to the passive damping ANKLE_PASSIVE_DAMPING with target 0, the effort is the sprocket torque and the integral is
+# reset.
 WHEEL_RADIUS = 0.015
 """Radius of the simulated track wheels [m]."""
-SPROCKET_RADIUS = 0.028
+SPROCKET_RADIUS = 0.045
 """Radius of the drive sprocket on the ankle axis [m]: belt speed per rad/s of the track joint, ``wheel_rad`` of the
-differential IK of the real robot (mulsbc_ws traquad8_dji.yaml). 25 mm was the smallest value that climbs 35 deg at
-mu 0.75 without tipping the tracks."""
+differential IK of the real robot (mulsbc_ws traquad8_dji.yaml, measured with the Qualisys on 2026-10-22; was 0.028)."""
+SPROCKET_TORQUE_FACTOR = 0.0
+"""Scale of the sprocket torque on the ankle (1 = the model above). Off since 2026-10-26: with r_s = 45 mm it tips the
+tracks onto their stops on flat ground (isaac_sim/track_test.py: 4% of the commanded yaw rate, no straight driving)
+and the replays of the real runs match the Qualisys without it (isaac_sim/real_id). Without it the robot climbs 30 deg
+at mu 0.6 but not 35 deg at mu 0.75 (isaac_sim/README.md)."""
+TRACK_FRICTION = 1.16
+"""Coulomb friction inside a track (belt, sprocket, gear) at the track joint [N m], from the torque of the real track
+drives on the straight runs of 2026-10-23 (isaac_sim/real_id)."""
+TRACK_VISCOUS = 0.013
+"""Viscous friction inside a track at the track joint [N m s/rad] (same runs)."""
 HIP_MAX_TORQUE = 10.0
 """Torque limit of a hip motor [N m] (not from the robot: raised from 5 N m, which saturated in training). Hips and tracks
 use the same actuator (same K_t), with moteus max_current_A 80 / 40 A and gear ratio 9 / 15 (mulsbc_ws
@@ -73,16 +76,34 @@ TRACK_MAX_TORQUE = HIP_MAX_TORQUE * (40.0 * 15.0) / (80.0 * 9.0)
 0.83 x HIP_MAX_TORQUE."""
 ANKLE_PASSIVE_DAMPING = 0.01
 """Passive viscous damping of the ankle pivot [N m s/rad] (same value as the USD ankle drive)."""
-ANKLE_SPEED_GAIN = 0.2
-"""Proportional gain of the ankle velocity controller used when the track is in the air [N m s/rad]."""
-ANKLE_INTEGRAL_GAIN = 2.0
-"""Integral gain of the ankle velocity controller [N m/rad]."""
-ANKLE_MAX_TORQUE = 0.05
-"""Largest torque of the ankle velocity controller [N m] (gravity on a hanging track is at most about 0.034 N m)."""
+ANKLE_SPEED_GAIN = 0.9
+"""Damping of the ankle drive while the track is in the air [N m s/rad]: Kd of the track joint (moteus, mulsbc_ws
+traquad8_dji.xacro). Until 2026-10-27 the ankle had a weak PI (0.2 / 2 / 0.05 N m) in the air."""
+# Wheel compensation of the real track controller (mulsbc_ws traquad8_dji.yaml, omni_controller wheel_compensation,
+# enabled on the robot; run lowlevel_wheel_compensation of 2026-10-23): the track drives have Kd only, so the omni_controller
+# adds as effort a friction feedforward and the integral of the track speed error. The track action applies it to the
+# wheels on top of their implicit drive (the Kd), at the track joint and referred to the wheels.
+WHEEL_COMP_FRICTION = 1.4
+"""Friction feedforward of the wheel compensation [N m] at the track joint."""
+WHEEL_COMP_VISCOUS = 0.017
+"""Viscous feedforward of the wheel compensation [N m s/rad] at the track joint."""
+WHEEL_COMP_FADE = 1.0
+"""Track speed command below which the feedforward fades to zero [rad/s]."""
+WHEEL_COMP_KI = 3.0
+"""Integral gain of the wheel compensation [N m/rad]."""
+WHEEL_COMP_I_MAX = 1.0
+"""Limit of the integral term of the wheel compensation [N m]."""
+ANKLE_INTEGRAL_GAIN = WHEEL_COMP_KI
+"""Integral gain of the ankle in the air [N m/rad]: ki of the wheel compensation of the omni_controller."""
+ANKLE_MAX_TORQUE = WHEEL_COMP_I_MAX
+"""Limit of the integral term of the ankle in the air [N m]: i_max of the wheel compensation."""
 ANKLE_VELOCITY_RATIO = {"LEFT": -WHEEL_RADIUS / SPROCKET_RADIUS, "RIGHT": WHEEL_RADIUS / SPROCKET_RADIUS}
 """Ankle velocity target per unit of wheel velocity target, by side. The wheel axes point along -y (left) and +y
 (right), the ankle axes of both sides along +y: the sprocket turns with the wheels."""
-ANKLE_SPROCKET_TORQUE_RATIO = {"LEFT": -SPROCKET_RADIUS / WHEEL_RADIUS, "RIGHT": SPROCKET_RADIUS / WHEEL_RADIUS}
+ANKLE_SPROCKET_TORQUE_RATIO = {
+    "LEFT": -SPROCKET_TORQUE_FACTOR * SPROCKET_RADIUS / WHEEL_RADIUS,
+    "RIGHT": SPROCKET_TORQUE_FACTOR * SPROCKET_RADIUS / WHEEL_RADIUS,
+}
 """Ankle torque per unit of summed wheel drive torque of the track, by side (sprocket torque on the track)."""
 
 ##
@@ -146,46 +167,27 @@ TRAQUAD_CFG = ArticulationCfg(
             joint_velocity_limit=200.0,
             stiffness=0.0,
             damping=0.9 * (WHEEL_RADIUS / SPROCKET_RADIUS) ** 2 / 4,
+            # internal friction of the track, referred to the wheels and split over 4 (same values as the USD)
+            friction=TRACK_FRICTION * WHEEL_RADIUS / SPROCKET_RADIUS / 4,
+            dynamic_friction=TRACK_FRICTION * WHEEL_RADIUS / SPROCKET_RADIUS / 4,
+            viscous_friction=TRACK_VISCOUS * (WHEEL_RADIUS / SPROCKET_RADIUS) ** 2 / 4,
             # the wheels are tiny (r = 1.5 cm): armature improves the solver conditioning
             armature=0.001,
         ),
         # ankle: passive viscous damping (solver) + the effort of the PI velocity controller computed by the track
         # action on every physics step (zero on the ground), clipped here to ANKLE_MAX_TORQUE
-        "ankles": IdealPDActuatorCfg(
+        # ankle: implicit velocity drive, passive damping on the ground; the track action switches it to the track Kd
+        # with the sprocket speed as target while the track is in the air, and adds the integral (or the sprocket
+        # torque on the ground) as effort
+        "ankles": ImplicitActuatorCfg(
             joint_names_expr=["body_.*_ankle"],
             stiffness=0.0,
-            damping=0.0,
-            # the PI is clipped to ANKLE_MAX_TORQUE by the action; the sprocket torque reaches TRACK_MAX_TORQUE
-            actuator_effort_limit=1.2 * TRACK_MAX_TORQUE,
+            damping=ANKLE_PASSIVE_DAMPING,
+            joint_effort_limit=1.2 * TRACK_MAX_TORQUE,
             joint_velocity_limit=100.0,
-            viscous_friction=ANKLE_PASSIVE_DAMPING,
         ),
         # rollers have no actuator: they keep the passive drives written in the USD
     },
     soft_joint_pos_limit_factor=0.9,
 )
 """Configuration of the TraQuad robot with roller wheels."""
-
-TRAQUAD_CYLINDER_CFG = replace(
-    TRAQUAD_CFG,
-    spawn=replace(TRAQUAD_CFG.spawn, usd_path=TRAQUAD_CYLINDER_USD_PATH),
-    # no roller joints
-    init_state=replace(
-        TRAQUAD_CFG.init_state,
-        joint_pos={k: v for k, v in TRAQUAD_CFG.init_state.joint_pos.items() if "roller" not in k},
-    ),
-    actuators={
-        "legs": TRAQUAD_CFG.actuators["legs"],
-        "ankles": TRAQUAD_CFG.actuators["ankles"],
-        # only wheel 2 of each track is driven: the whole track motor on it
-        "wheels": ImplicitActuatorCfg(
-            joint_names_expr=["joint_wheel_2_.*"],
-            joint_effort_limit=TRACK_MAX_TORQUE * WHEEL_RADIUS / SPROCKET_RADIUS,
-            joint_velocity_limit=200.0,
-            stiffness=0.0,
-            damping=0.9 * (WHEEL_RADIUS / SPROCKET_RADIUS) ** 2,
-            armature=0.001,
-        ),
-    },
-)
-"""Configuration of the TraQuad robot with cylinder wheels coupled by mimic joints."""

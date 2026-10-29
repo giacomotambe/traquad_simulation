@@ -7,8 +7,9 @@
 
 The obstacles stay within what the robot can meet in its use: steps and boxes of at most 10 cm, slopes (pyramids and
 inverted pyramids) of at most 40 deg (the real robot climbs 35 deg on wooden boards). Each robot gets one ground
-friction for the whole training (startup): static 0.6-1.3, dynamic 0.3-1.0 limited to the static one. The roller dry
-friction is a property of the robot and stays fixed (0.06 N m, in the asset).
+friction for the whole training (startup): static 0.4-1.1 (0.45 = lab mat, identified on the Qualisys runs), dynamic
+0.3-1.0 limited to the static one. The roller dry friction is a property of the robot and stays fixed (0.10 N m, in the
+asset).
 """
 
 import math
@@ -91,7 +92,7 @@ class TraQuadMixedEnvCfg(TraQuadRoughEnvCfg):
         self.commands.base_velocity.rel_standing_envs = 0.1
         # events: one friction per robot for the whole training
         self.events.ground_friction.params = {
-            "static_friction_range": (0.6, 1.3),
+            "static_friction_range": (0.4, 1.1),
             "dynamic_friction_range": (0.3, 1.0),
             "num_buckets": 256,
         }

@@ -6,6 +6,9 @@
 __all__ = [
     "JointVelocityActionGroup",
     "JointVelocityActionGroupCfg",
+    "base_lin_acc_b",
+    "hip_angle_range_l1",
+    "hip_posture_r2_l1",
     "joint_vel_difference",
     "joint_power_l1",
     "joint_vel_sign_disagreement",
@@ -19,7 +22,10 @@ __all__ = [
 
 from .actions import JointVelocityActionGroup, JointVelocityActionGroupCfg
 from .events import randomize_ground_friction
+from .observations import base_lin_acc_b
 from .rewards import (
+    hip_angle_range_l1,
+    hip_posture_r2_l1,
     joint_power_l1,
     joint_vel_difference,
     joint_vel_sign_disagreement,

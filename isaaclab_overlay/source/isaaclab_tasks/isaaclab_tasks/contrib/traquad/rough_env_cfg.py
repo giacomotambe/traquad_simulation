@@ -34,7 +34,14 @@ from isaaclab_assets.robots.traquad import (  # isort: skip
     ANKLE_SPEED_GAIN,
     ANKLE_SPROCKET_TORQUE_RATIO,
     ANKLE_VELOCITY_RATIO,
+    SPROCKET_RADIUS,
     TRAQUAD_CFG,
+    WHEEL_COMP_FADE,
+    WHEEL_COMP_FRICTION,
+    WHEEL_COMP_I_MAX,
+    WHEEL_COMP_KI,
+    WHEEL_COMP_VISCOUS,
+    WHEEL_RADIUS,
 )
 
 # the links of the TraQuad USD are nested under Robot/Geometry
@@ -43,6 +50,16 @@ BASE_PRIM_PATH = "{ENV_REGEX_NS}/Robot/Geometry/base_link"
 # track velocity action scale [rad/s of the wheels per unit of action]: 1 unit = 1.3 m/s of track speed (r = 15 mm).
 # With |v| <= 1 m/s and |w| <= 1 rad/s a track needs up to v + w * B / 2 = 1.2 m/s, plus the skid-steering slip
 WHEEL_VEL_SCALE = 1.3 / 0.015
+
+# wheel compensation of the real track controller, applied by each track action to its wheels
+_WHEEL_COMP = dict(
+    track_ratio=WHEEL_RADIUS / SPROCKET_RADIUS,
+    comp_friction=WHEEL_COMP_FRICTION,
+    comp_viscous=WHEEL_COMP_VISCOUS,
+    comp_fade=WHEEL_COMP_FADE,
+    comp_ki=WHEEL_COMP_KI,
+    comp_i_max=WHEEL_COMP_I_MAX,
+)
 
 
 ##
@@ -102,6 +119,7 @@ class ActionsCfg:
         speed_gain=ANKLE_SPEED_GAIN,
         integral_gain=ANKLE_INTEGRAL_GAIN,
         max_torque=ANKLE_MAX_TORQUE,
+        **_WHEEL_COMP,
     )
     joint_vel_LH = mdp.JointVelocityActionGroupCfg(
         asset_name="robot",
@@ -114,6 +132,7 @@ class ActionsCfg:
         speed_gain=ANKLE_SPEED_GAIN,
         integral_gain=ANKLE_INTEGRAL_GAIN,
         max_torque=ANKLE_MAX_TORQUE,
+        **_WHEEL_COMP,
     )
     joint_vel_RF = mdp.JointVelocityActionGroupCfg(
         asset_name="robot",
@@ -126,6 +145,7 @@ class ActionsCfg:
         speed_gain=ANKLE_SPEED_GAIN,
         integral_gain=ANKLE_INTEGRAL_GAIN,
         max_torque=ANKLE_MAX_TORQUE,
+        **_WHEEL_COMP,
     )
     joint_vel_RH = mdp.JointVelocityActionGroupCfg(
         asset_name="robot",
@@ -138,6 +158,7 @@ class ActionsCfg:
         speed_gain=ANKLE_SPEED_GAIN,
         integral_gain=ANKLE_INTEGRAL_GAIN,
         max_torque=ANKLE_MAX_TORQUE,
+        **_WHEEL_COMP,
     )
 
 
@@ -147,10 +168,11 @@ class ObservationsCfg:
 
     @configclass
     class PolicyCfg(ObsGroup):
-        """Observations for the policy (no base linear velocity)."""
+        """Observations for the policy. The only inertial sensor of the robot is the accelerometer, with the gravity
+        offset removed on board: base linear acceleration and projected gravity, no gyro, no base velocity."""
 
         # observation terms (order preserved)
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
+        base_lin_acc = ObsTerm(func=mdp.base_lin_acc_b, scale=0.1, noise=Unoise(n_min=-0.5, n_max=0.5))
         projected_gravity = ObsTerm(func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05))
         velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
         joint_pos = ObsTerm(
@@ -176,9 +198,10 @@ class ObservationsCfg:
 
     @configclass
     class CriticCfg(PolicyCfg):
-        """Observations for the critic: the policy ones plus base linear velocity and height scan, no noise."""
+        """Observations for the critic: the policy ones plus base velocities and height scan, no noise."""
 
         base_lin_vel = ObsTerm(func=mdp.base_lin_vel)
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel)
         height_scan = ObsTerm(func=mdp.height_scan, params={"sensor_cfg": SceneEntityCfg("height_scanner")})
 
         def __post_init__(self):
@@ -195,14 +218,14 @@ class EventsCfg:
     """Configuration for events."""
 
     # startup
-    # the terrain: one wheel-ground friction per robot, dynamic <= static (static 0.6-1.3: rubber on wood, concrete,
-    # asphalt)
-    # With the roller dry friction of the asset (0.06 N m, fixed: a property of the robot) the rollers stay locked
-    # when parked, so the lateral grip of the robot follows this friction (slides at tan(slope) > mu)
+    # the terrain: one wheel-ground friction per robot, dynamic <= static (static 0.4-1.1: from the lab rubber mat, 0.45
+    # identified on the Qualisys runs, to rubber on wood and concrete)
+    # With the roller dry friction of the asset (0.10 N m since 2026-10-27, fixed: a property of the robot) the rollers
+    # stay locked when parked, so the lateral grip of the robot follows this friction (slides at tan(slope) > mu)
     ground_friction = EventTerm(
         func=mdp.randomize_ground_friction,
         mode="startup",
-        params={"static_friction_range": (0.6, 1.3), "dynamic_ratio_range": (0.8, 1.0), "num_buckets": 256},
+        params={"static_friction_range": (0.4, 1.1), "dynamic_ratio_range": (0.8, 1.0), "num_buckets": 256},
     )
 
     add_base_mass = EventTerm(
@@ -254,13 +277,13 @@ class EventsCfg:
 class RewardsCfg:
     """Reward terms for the MDP."""
 
-    # -- task
+    # -- task (kernels narrowed after run acc_r2, which drove at 0.78 m/s for 0.6)
     track_lin_vel_x_exp = RewTerm(
-        func=mdp.track_lin_vel_x_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.15)}
+        func=mdp.track_lin_vel_x_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.08)}
     )
     # yaw tracking is the hard part of skid steering: same weight as the forward velocity
     track_ang_vel_z_exp = RewTerm(
-        func=mdp.track_ang_vel_z_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
+        func=mdp.track_ang_vel_z_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.15)}
     )
     # -- penalties
     lin_vel_z_l2 = RewTerm(func=mdp.lin_vel_z_l2, weight=-0.05)
@@ -281,8 +304,23 @@ class RewardsCfg:
     )
     # raw actions: with exploration noise 1.0 the sum over the 8 actions is about 16, keep it light at the start
     action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
+    # legs at the posture of the R2 mode of the real robot for the command: the stance when driving straight, all hips
+    # shifted together when turning (narrower footprint, easier turning in place). With -0.1 and no target while turning
+    # (run acc_r2) the policy turned with the opposite shift, about twice as large
     joint_deviation_l1 = RewTerm(
-        func=mdp.joint_deviation_l1, weight=-0.1, params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*HFE"])}
+        func=mdp.hip_posture_r2_l1,
+        weight=-0.3,
+        params={"command_name": "base_velocity", "asset_cfg": SceneEntityCfg("robot", joint_names=[".*HFE"])},
+    )
+    # hips within the range of R2 (alpha 1.1-2.1 rad): beyond it the passive ankles hit their stops and the tracks ride
+    # on an edge (run acc_r2: alpha down to 0.73 on flat ground)
+    hip_angle_range = RewTerm(
+        func=mdp.hip_angle_range_l1, weight=-2.0, params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*HFE"])}
+    )
+    # mechanical power of the tracks [W]: skid steering costs track power, a posture that turns with less scrubbing
+    # (R2) pays off
+    track_power_l1 = RewTerm(
+        func=mdp.joint_power_l1, weight=-1.0e-3, params={"asset_cfg": SceneEntityCfg("robot", joint_names=["joint_wheel_.*"])}
     )
     # off: the ankles are passive on the ground and follow the track command in the air, the policy acts on them only
     # indirectly; in the first trainings this was the largest penalty and mostly noise

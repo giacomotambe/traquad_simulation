@@ -145,3 +145,41 @@ def track_slip_l1(env: ManagerBasedRLEnv, wheel_radius: float, asset_cfg: SceneE
     w = asset.data.joint_vel.torch[:, asset_cfg.joint_ids]
     belt = wheel_radius * (-w[:, 0] - w[:, 1] + w[:, 2] + w[:, 3]) / 4.0
     return torch.abs(belt - asset.data.root_lin_vel_b.torch[:, 0])
+
+
+def hip_posture_r2_l1(
+    env: ManagerBasedRLEnv,
+    command_name: str,
+    delta_max: float = 0.30,
+    omega0: float = 0.5,
+    v0: float = 1.0,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Deviation (L1) of the hips from the posture of the R2 mode of the real robot for the current command.
+
+    R2 (mulinex_app omni_mulinex_joystick yaw_posture) adds the same offset delta to the four HFE joints, with
+    delta = delta_max tanh(wz / omega0) / (1 + |vx| / v0): zero when driving straight (the stance), up to delta_max
+    when turning in place, which narrows the footprint and makes turning in place easier.
+    """
+    asset: Articulation = env.scene[asset_cfg.name]
+    command = env.command_manager.get_command(command_name)
+    delta = delta_max * torch.tanh(command[:, 2:3] / omega0) / (1.0 + command[:, 0:1].abs() / v0)
+    target = asset.data.default_joint_pos.torch[:, asset_cfg.joint_ids] + delta
+    return torch.sum(torch.abs(asset.data.joint_pos.torch[:, asset_cfg.joint_ids] - target), dim=1)
+
+
+def hip_angle_range_l1(
+    env: ManagerBasedRLEnv,
+    alpha_min: float = 1.1,
+    alpha_max: float = 2.1,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Hip angles outside [alpha_min, alpha_max] (L1), alpha = HFE angle with the sign of the stance (leg down > 0).
+
+    Same range as the R2 mode of the real robot. Further out the passive ankle (+-30 deg) cannot keep the track flat
+    and the track rides on an edge against its end stop.
+    """
+    asset: Articulation = env.scene[asset_cfg.name]
+    sign = torch.sign(asset.data.default_joint_pos.torch[:, asset_cfg.joint_ids])
+    alpha = asset.data.joint_pos.torch[:, asset_cfg.joint_ids] * sign
+    return torch.sum((alpha_min - alpha).clamp(min=0.0) + (alpha - alpha_max).clamp(min=0.0), dim=1)
