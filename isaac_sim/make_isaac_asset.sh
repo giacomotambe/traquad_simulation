@@ -2,27 +2,21 @@
 # Build the instanceable Isaac Sim / Isaac Lab asset of traquad from the current xacro:
 # xacro -> URDF (host mesh paths) -> USD (URDF importer) -> default physics settings (finalize_usd.py).
 # usage: ./make_isaac_asset.sh [roller_damping] [roller_friction]            output: assets/traquad/traquad.usda
-#        TRACK_MODEL=cylinder ./make_isaac_asset.sh                        output: assets/traquad_cylinder/traquad.usda
-#        TRACK_MODEL=spheres ./make_isaac_asset.sh [ball_damping] [ball_friction]   output: assets/traquad_spheres/traquad.usda
-#        TRACK_MODEL=gimbal ./make_isaac_asset.sh [ball_damping] [ball_friction]    output: assets/traquad_gimbal/traquad.usda
-#        TRACK_MODEL=barrel ROLLER_N=8 ./make_isaac_asset.sh [roller_damping] [roller_friction]   output: assets/traquad_barrel8/traquad.usda
-#        ROLLER_N=8 ROLLER_OFFSET=0.001 ./make_isaac_asset.sh   (rollers model, 8 rollers of 14 mm)   output: assets/traquad_r8_d1/traquad.usda
-#   extra finalize_usd.py options can be passed in FINALIZE_ARGS (e.g. "--wheel_max_torque 0.5")
+#   extra finalize_usd.py options can be passed in FINALIZE_ARGS (e.g. "--hfe_offset -0.05")
+#   finalize_usd.py alone can be rerun on the existing asset to change drives and frictions (no ROS needed)
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
-TRACK_MODEL=${TRACK_MODEL:-rollers}
-NAME=traquad; [ "$TRACK_MODEL" = cylinder ] && NAME=traquad_cylinder; [ "$TRACK_MODEL" = spheres ] && NAME=traquad_spheres; [ "$TRACK_MODEL" = gimbal ] && NAME=traquad_gimbal
-[ "$TRACK_MODEL" = barrel ] && NAME=traquad_barrel${ROLLER_N:-8} && XACRO_EXTRA="$XACRO_EXTRA roller_n:=${ROLLER_N:-8}" && export XACRO_EXTRA
-# rollers model with other rollers: ROLLER_N (8), ROLLER_OFFSET (0.007 m) -> assets/traquad_r<N>_d<offset in mm>
-[ "$TRACK_MODEL" = rollers ] && [ -n "$ROLLER_N$ROLLER_OFFSET" ] && NAME=traquad_r${ROLLER_N:-8}_d$(python3 -c "print(f'{${ROLLER_OFFSET:-0.007}*1000:g}')") \
-  && XACRO_EXTRA="$XACRO_EXTRA roller_n:=${ROLLER_N:-8} roller_offset:=${ROLLER_OFFSET:-0.007}" && export XACRO_EXTRA
+NAME=traquad
 TMP=$(mktemp -d)
-TRACK_MODEL=$TRACK_MODEL "$HERE/make_urdf.sh" "$TMP/traquad.urdf"
+"$HERE/make_urdf.sh" "$TMP/traquad.urdf"
 "$HERE/import_urdf.sh" "$TMP/traquad.urdf" "$TMP/usd" > "$TMP/import.log" 2>&1
 grep -a "Import complete" "$TMP/import.log"
 rm -rf "$HERE/assets/$NAME"
 mv "$TMP/usd/traquad" "$HERE/assets/$NAME"
-"$HERE/isaac.sh" "$HERE/finalize_usd.py" --usd "$HERE/assets/$NAME/traquad.usda" \
-  --roller_damping "${1:-1e-4}" --roller_friction "${2:-0.06}" $FINALIZE_ARGS > "$TMP/finalize.log" 2>&1
+ROLLER_ARGS=""
+[ -n "$1" ] && ROLLER_ARGS="$ROLLER_ARGS --roller_damping $1"
+[ -n "$2" ] && ROLLER_ARGS="$ROLLER_ARGS --roller_friction $2"
+"$HERE/isaac.sh" "$HERE/finalize_usd.py" --usd "$HERE/assets/$NAME/traquad.usda" $ROLLER_ARGS $FINALIZE_ARGS \
+  > "$TMP/finalize.log" 2>&1
 grep -a "^finalized\|Traceback" "$TMP/finalize.log"
 rm -rf "$TMP"

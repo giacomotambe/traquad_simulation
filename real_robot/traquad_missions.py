@@ -10,7 +10,7 @@ replayed in the simulation (isaac_sim/track_test.py runs the 'maneuver' one).
 
 Commands go to the omni_controller topics:
 - twist missions: /omni_controller/twist_cmd (BestEffort, deadline 105 ms as the controller requests; IK mode,
-  track_width 0.4, wheel_rad 0.028, 2 Hz low-pass on the twist);
+  TraquadIK of traquad8_dji.yaml, wheel_rad 0.045, 2 Hz low-pass on the twist);
 - wheel missions: /omni_controller/direct_wheels_cmd after set_wheel_mode true (track joint speeds in rad/s, no
   low-pass; right joints turn the other way for forward motion, as in the IK);
 - hip missions: /omni_controller/joints_reference (HFE positions, kp_scale = kd_scale = 1: Kp 60, Kd 0.6).

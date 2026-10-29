@@ -7,14 +7,15 @@ the yaw ratio, the lateral drift and the final pose error vs the ideal unicycle,
 - wheel torque demand: mean |torque| of the driven wheels over their limit, and time at the limit, per phase
 - stability (whole run after the first 0.5 s): 99th percentile of |base vertical acceleration|, max |roll/pitch
   rate| of the base, max |velocity| of rollers and ankles, NaN check.
-Works with both track models: with the cylinder model only the driven wheels (wheel 2, not mimic followers) are
-commanded. Wheel gain and torque limit are read from the USD (written by finalize_usd.py) unless overridden.
+Wheel gain and torque limit are read from the USD (written by finalize_usd.py) unless overridden. The track commands
+are open loop through a plain 0.4 m differential (no IK of the robot), with the wheel compensation of the robot on the
+tracks (ankle_control.py; --no_wheel_comp: Kd only): for comparisons with the real robot use real_replay.py, which runs
+the replica of the robot controllers.
 
 usage: ./isaac.sh track_test.py --usd <robot.usda> --out <csv> [--damping d] [--mu 0.5] [--mu_dyn 0.45] [--info]
 """
 import argparse
 from ankle_control import PASSIVE_DAMPING, AnkleController
-from gimbal_reset import THRESHOLD as GIMBAL_THRESHOLD, GimbalReset
 import csv
 import math
 
@@ -23,9 +24,9 @@ parser.add_argument('--usd', required=True)
 parser.add_argument('--out', required=True)
 parser.add_argument('--damping', type=float, default=1e-4, help='roller joint damping [Nms/rad]')
 parser.add_argument('--roller_friction', type=float, default=None,
-                    help='roller joint dry friction [Nm] (default: from the USD, 0.06)')
-parser.add_argument('--mu', type=float, default=0.6,
-                    help='isotropic (static) friction of ground and robot (0.6 = measured for the tracks on the lab rubber mat)')
+                    help='roller joint dry friction [Nm] (default: from the USD, 0.10)')
+parser.add_argument('--mu', type=float, default=0.45,
+                    help='isotropic (static) friction of ground and robot (0.45 = identified on the lab rubber mat with the Qualisys runs)')
 parser.add_argument('--mu_dyn', type=float, default=None, help='dynamic friction (default: same as --mu)')
 parser.add_argument('--wheel_kd', type=float, default=None, help='driven wheel velocity gain (default: from the USD)')
 parser.add_argument('--wheel_max', type=float, default=None, help='driven wheel torque limit (default: from the USD)')
@@ -46,11 +47,10 @@ parser.add_argument('--sprocket_radius', type=float, default=None, help='drive s
 parser.add_argument('--no_sprocket_torque', action='store_true',
                     help='no sprocket torque on the ankle on the ground (drive reaction stays in the track frame)')
 parser.add_argument('--no_coupling', action='store_true', help='ankles always passive (no velocity control in the air)')
+parser.add_argument('--no_wheel_comp', action='store_true', help='tracks with the Kd only (no wheel compensation)')
 parser.add_argument('--ankle_range', type=float, default=None, help='ankle end stops +- this around the flat pose of the '
                     'default stance (0.1008) [rad] (default: from the USD, +-0.5236)')
 parser.add_argument('--ankle_kd', type=float, default=None, help='passive ankle damping [N m s/rad] (default: ankle_control)')
-parser.add_argument('--gimbal_threshold', type=float, default=GIMBAL_THRESHOLD,
-                    help='gimbal model: reset the passive joint angle above this [rad] (negative: never)')
 args, _ = parser.parse_known_args()
 
 from isaacsim import SimulationApp  # noqa: E402
@@ -176,8 +176,8 @@ kp[hfe] = args.hfe_kp; kd[hfe] = args.hfe_kd; fmax[hfe] = 10.0
 kd[wheels_l + wheels_r] = WHEEL_KD; fmax[wheels_l + wheels_r] = WHEEL_MAX
 kd[ankles] = PASSIVE_DAMPING if args.ankle_kd is None else args.ankle_kd   # passive ankle (velocity control in the air below)
 ankle_ctrl = AnkleController(robot, enabled=not args.no_coupling, wheel_kd=None if args.no_sprocket_torque else WHEEL_KD,
-                             wheel_max=WHEEL_MAX, followers=FOLLOWERS, sprocket_radius=args.sprocket_radius)
-gimbal = GimbalReset(robot, args.gimbal_threshold) if args.gimbal_threshold >= 0 else None
+                             wheel_max=WHEEL_MAX, followers=FOLLOWERS, sprocket_radius=args.sprocket_radius,
+                             wheel_comp=not args.no_wheel_comp)
 if args.ankle_range is not None:
     lo_, hi_ = (x.numpy() for x in robot.get_dof_limits())
     for n_, i_ in idx.items():
@@ -360,8 +360,6 @@ for ph, arr in stab['phase'].items():
           + f" | HFE saturated {100 * a_[:, 4:8].any(1).mean():.0f}% of the time"
           + ' | track motor torque mean / max [N m] ' + ' '.join(f'{np.abs(a_[:, 8 + j]).mean():.2f}/{np.abs(a_[:, 8 + j]).max():.1f}' for j in range(4))
           + f' | HFE torque mean {a_[:, 12:16].mean():.2f} N m', flush=True)
-if gimbal is not None and gimbal.ids.size:
-    print(f'RESULT gimbal resets {gimbal.resets} ({gimbal.resets / t:.0f}/s over 16 joints)', flush=True)
 print(f"RESULT stability: p99 |base z acc| {np.percentile(az_all, 99):.2f} m/s^2 | max |roll/pitch rate| "
       f"{max(stab['wxy']):.3f} rad/s | max |roller vel| {max(stab['roller']):.0f} rad/s | max |ankle vel| "
       f"{max(stab['ankle']):.2f} rad/s | NaN {stab['nan']}", flush=True)

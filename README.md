@@ -1,6 +1,19 @@
-<<<<<<< HEAD
-# traquad_gazebo
-=======
+# TraQuad simulation
+
+Simulation of the TraQuad (Mulinex on tracks) in Isaac Sim 6.1 / Isaac Lab 3.0, plus the older Gazebo setup below.
+
+- `isaac_sim/`: the robot asset (`assets/traquad`), the replica of the real controllers
+  (`traquad_real_controller.py`), the replay of the real runs against the Qualisys ground truth (`real_replay.py`,
+  `real_id/`) and the test scripts. Start from `isaac_sim/README.md`: current model, identified parameters, how to run,
+  changelog.
+- `isaaclab_overlay/`: the TraQuad tasks and robot config for Isaac Lab, linked into `isaaclab_traquad/` by
+  `isaaclab_overlay/setup_isaaclab.sh`.
+- `open_traquad.py`: the robot in Isaac Lab with joystick-like velocity commands.
+- `real_robot/traquad_missions.py`: identification missions for the real robot (run on the NUC).
+- `src/mulinex_description`: xacro of the robot (`traquad.xacro`, tracks in `track.xacro`).
+- Real runs with the Qualisys: github.com/giacomotambe/traquad_bags; robot code: github.com/giacomotambe/mulsbc_ws
+  (SBC) and github.com/giacomotambe/mulinex_app (NUC).
+
 # Dockerized Gazebo Harmonic Simulator 
 ## introduction
 This repository contains a docker compose structure to simulate robots in Gazebo Sim Fortress supported by ROS2 humble on ubuntu 22.04.
@@ -165,5 +178,3 @@ Su un nuovo terminale, lancerai i nodi dal tuo PC per controllare il robot:
         - file di launch "gz_harmonic_sim_W_rbt_PD_wheels.launch.py"
         - file di inference "inference_controller.py"
 
-
->>>>>>> aab703e (Import progetto esistente)

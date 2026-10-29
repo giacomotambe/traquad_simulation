@@ -8,6 +8,10 @@ into wheel angular velocities:
     v_right = v + w * B / 2
     omega_wheel = v_side / r
 
+The wheels get the wheel compensation of the real track controller (omni_controller wheel_compensation, enabled on the
+robot) on top of their velocity drive, and the ankles the model of the Isaac Lab tasks (passive on the ground, driven
+with the sprocket by the track controller in the air): same law as isaac_sim/ankle_control.py.
+
 Requires Isaac Lab 3.0 with Isaac Sim 6.1 (PhysX backend).
 
 Usage (conda env with Isaac Lab 3.0):
@@ -30,20 +34,14 @@ parser.add_argument("--lin_vel", type=float, default=0.3, help="Forward velocity
 parser.add_argument("--ang_vel", type=float, default=0.0, help="Yaw rate command [rad/s].")
 parser.add_argument("--demo", action="store_true", help="Cycle through a sequence of (v, w) commands.")
 parser.add_argument(
-    "--model",
-    choices=["rollers", "cylinder"],
-    default="rollers",
-    help="Track model: wheels with passive rollers, or plain cylinder wheels coupled by mimic joints.",
-)
-parser.add_argument(
     "--rigid_legs", action="store_true", help="Hold HFE and ankle joints at the stance with very stiff drives."
 )
 parser.add_argument(
     "--wheel_friction",
     type=float,
-    default=0.6,
-    help="Static friction of the track wheels, min with the ground (default 0.6: measured for the tracks on the lab "
-    "rubber mat; 0 keeps the robot default material 0.5, averaged with the ground).",
+    default=0.45,
+    help="Static friction of the track wheels, min with the ground (default 0.45: identified on the lab rubber mat with "
+    "the Qualisys runs; 0 keeps the robot default material 0.5, averaged with the ground).",
 )
 parser.add_argument(
     "--wheel_dynamic_friction",
@@ -51,19 +49,22 @@ parser.add_argument(
     default=None,
     help="Dynamic (sliding) friction of the track wheels (min with the ground; default: same as the static one).",
 )
-parser.add_argument("--ground_friction", type=float, default=0.6, help="Friction of the ground plane.")
+parser.add_argument("--ground_friction", type=float, default=0.45, help="Friction of the ground plane.")
 parser.add_argument(
     "--track_max_torque",
     type=float,
-    default=10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.028,
+    default=10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.045,
     help="Torque limit of a track motor [Nm at r = 15 mm]: same actuator as the hips (10 Nm), 40 A x gear 15 against "
-    "80 A x gear 9, i.e. 0.83 x 10 Nm at the 28 mm sprocket (4.46 Nm = 298 N of belt force).",
+    "80 A x gear 9, i.e. 0.83 x 10 Nm at the 45 mm sprocket (2.78 Nm = 185 N of belt force).",
 )
 parser.add_argument(
     "--ankle_stiffness",
     type=float,
     default=0.0,
     help="Ankle PD stiffness [Nm/rad] (0: ankle model of the asset and the RL tasks, driven by the track motor).",
+)
+parser.add_argument(
+    "--no_wheel_comp", action="store_true", help="Moteus Kd only on the tracks, without the wheel compensation."
 )
 add_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -72,27 +73,23 @@ import torch
 from isaaclab_physx.sim.schemas import PhysxArticulationCfg, PhysxRigidBodyCfg
 
 import isaaclab.sim as sim_utils
-from isaaclab.actuators import IdealPDActuatorCfg, ImplicitActuatorCfg
+from isaaclab.actuators import ImplicitActuatorCfg
 from isaaclab.assets import Articulation, ArticulationCfg
 from isaaclab.utils.math import quat_apply_inverse
 
 
-# instanceable assets of this repository (rebuild with isaac_sim/make_isaac_asset.sh); TRAQUAD_USD overrides them
-ASSET_DIR = {"rollers": "traquad", "cylinder": "traquad_cylinder"}[args_cli.model]
+# instanceable asset of this repository (rebuild with isaac_sim/make_isaac_asset.sh); TRAQUAD_USD overrides it
 USD_PATH = os.environ.get(
     "TRAQUAD_USD",
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "isaac_sim", "assets", ASSET_DIR, "traquad.usda"),
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "isaac_sim", "assets", "traquad", "traquad.usda"),
 )
 
-# Driven wheels and their velocity drive (damping = velocity gain). With the cylinder model only wheel 2 of each
-# track is driven, wheels 1, 3, 4 follow it through mimic joints. Track motor (same values as isaac_sim/finalize_usd.py):
-# torque limit --track_max_torque and the velocity gain of the real track joint (moteus Kd 0.9 N m s/rad at the 28 mm
+# Driven wheels (all 4 of each track) and their velocity drive (damping = velocity gain). Track motor (same values as
+# isaac_sim/finalize_usd.py):
+# torque limit --track_max_torque and the velocity gain of the real track joint (moteus Kd 0.9 N m s/rad at the 45 mm
 # sprocket, Kp 0, mulsbc_ws traquad8_dji.xacro) referred to the 15 mm wheels, split over the driven wheels of the track
-TRACK_MAX_TORQUE, TRACK_DAMPING = args_cli.track_max_torque, 0.9 * (0.015 / 0.028) ** 2
-if args_cli.model == "cylinder":
-    WHEEL_JOINTS, DRIVEN_PER_TRACK = "joint_wheel_2_", 1
-else:
-    WHEEL_JOINTS, DRIVEN_PER_TRACK = "joint_wheel_.*_", 4
+TRACK_MAX_TORQUE, TRACK_DAMPING = args_cli.track_max_torque, 0.9 * (0.015 / 0.045) ** 2
+WHEEL_JOINTS, DRIVEN_PER_TRACK = "joint_wheel_.*_", 4
 WHEEL_MAX_TORQUE, WHEEL_DAMPING = TRACK_MAX_TORQUE / DRIVEN_PER_TRACK, TRACK_DAMPING / DRIVEN_PER_TRACK
 
 # Track geometry (from traquad.urdf)
@@ -102,16 +99,27 @@ WHEEL_RADIUS = 0.015  # [m]
 TRACK_WIDTH = 0.4
 # Skid-steer slip compensation: effective width > geometric width (tune if turning is too slow/fast)
 TRACK_WIDTH_FACTOR = 1.0
-# Ankle (same model as isaaclab_assets/robots/traquad.py): the drive sprocket is coaxial with the ankle. On the ground
-# the ankle gets the torque of the sprocket on the track, (SPROCKET_RADIUS / WHEEL_RADIUS) x the wheel drive torque
-# (the simulated motor drives the wheels, the real one the belt from the pivot); with the track in the air a PI velocity
-# controller turns the frame with the sprocket (v / SPROCKET_RADIUS) until an end stop. Contact is taken from the
-# height of the wheels above the flat ground of this script.
-SPROCKET_RADIUS = 0.028  # [m], wheel_rad of the real robot IK (mulsbc_ws traquad8_dji.yaml)
+# Ankle (same model as isaaclab_assets/robots/traquad.py and isaac_sim/ankle_control.py): the drive sprocket is coaxial
+# with the ankle. On the ground the ankle is passive (ANKLE_PASSIVE_DAMPING), plus the torque of the sprocket on the
+# track, (SPROCKET_RADIUS / WHEEL_RADIUS) x the wheel drive torque, scaled by SPROCKET_TORQUE_FACTOR. With the track in
+# the air the frame turns with the sprocket (v / SPROCKET_RADIUS) until an end stop, driven by the controller of its
+# track: the moteus Kd (implicit velocity drive of the ankle) and the integral of the wheel compensation as effort,
+# reset when the track touches the ground. Contact is taken from the height of the wheels above the flat ground of this
+# script.
+SPROCKET_RADIUS = 0.045  # [m], wheel_rad of the real robot IK (mulsbc_ws traquad8_dji.yaml, Qualisys 2026-10-22)
+# scale of the sprocket torque on the ground; off since 2026-10-26: with r_s 45 mm it tips the tracks onto their stops
+SPROCKET_TORQUE_FACTOR = 0.0
 ANKLE_PASSIVE_DAMPING = 0.01  # [N m s/rad]
-ANKLE_SPEED_GAIN = 0.2  # [N m s/rad]
-ANKLE_INTEGRAL_GAIN = 2.0  # [N m/rad]
-ANKLE_MAX_TORQUE = 0.05  # [N m]
+ANKLE_SPEED_GAIN = 0.9  # [N m s/rad], moteus Kd of the track joint
+# wheel compensation of the omni_controller (mulsbc_ws traquad8_dji.yaml), at the track joint (sprocket): friction
+# feedforward sign(w) (FRICTION + VISCOUS |w|), faded below FADE, plus the integral of the track speed error (KI, +-I_MAX)
+WHEEL_COMP_FRICTION = 1.4  # [N m]
+WHEEL_COMP_VISCOUS = 0.017  # [N m s/rad]
+WHEEL_COMP_FADE = 1.0  # [rad/s]
+WHEEL_COMP_KI = 3.0  # [N m/rad]
+WHEEL_COMP_I_MAX = 1.0  # [N m]
+ANKLE_INTEGRAL_GAIN = WHEEL_COMP_KI  # [N m/rad]
+ANKLE_MAX_TORQUE = WHEEL_COMP_I_MAX  # [N m]
 CONTACT_MARGIN = 0.004  # [m], wheel centre below WHEEL_RADIUS + this: the track touches the ground
 AIR_DELAY = 0.05  # [s], time without contact before the ankle controller takes over
 # first-order low-pass on the twist command, as the omni_controller of the real robot (velocity_lpf, 2 Hz)
@@ -224,14 +232,14 @@ def make_actuators_cfg():
                 damping=0.2,
             )
             if args_cli.ankle_stiffness > 0.0
-            else IdealPDActuatorCfg(
+            else ImplicitActuatorCfg(
                 joint_names_expr=["body_.*_ankle"],
-                stiffness=0.0,
-                damping=0.0,
-                # the PI is clipped to ANKLE_MAX_TORQUE below; the sprocket torque reaches 0.83 x 10 N m
-                actuator_effort_limit=10.0,
+                # the integral is clipped to ANKLE_MAX_TORQUE below; the sprocket torque reaches 0.83 x 10 N m
+                joint_effort_limit=10.0,
                 joint_velocity_limit=100.0,
-                viscous_friction=ANKLE_PASSIVE_DAMPING,
+                stiffness=0.0,
+                # passive damping on the ground, switched to ANKLE_SPEED_GAIN in the air by TrackController
+                damping=ANKLE_PASSIVE_DAMPING,
             )
         ),
         "wheels": make_wheels_actuator_cfg(),
@@ -366,11 +374,11 @@ def twist_to_wheel_velocities(robot, left_ids, right_ids, lin_vel, ang_vel):
     return joint_vel
 
 
-class AnkleController:
-    """PI velocity control of the ankles while the tracks are in the air (effort commands, run every physics step)."""
+class TrackController:
+    """Wheel compensation of the tracks and control of the ankles in the air (run every physics step)."""
 
-    def __init__(self, robot, dt):
-        self.robot, self.dt = robot, dt
+    def __init__(self, robot, dt, ankles=True, wheel_comp=True):
+        self.robot, self.dt, self.ankles, self.wheel_comp = robot, dt, ankles, wheel_comp
         self.tracks = []
         for side, track in (("left", "LEFT"), ("right", "RIGHT")):
             for fh in ("F", "H"):
@@ -381,29 +389,59 @@ class AnkleController:
         self.ankle_ids = [a for a, _, _, _ in self.tracks]
         self.integral = torch.zeros(robot.num_instances, len(self.tracks), device=robot.device)
         self.air_time = torch.zeros_like(self.integral)
+        self.was_in_air = torch.zeros_like(self.integral, dtype=torch.bool)
+        self.comp_integral = torch.zeros_like(self.integral)
 
-    def efforts(self, v_left, v_right):
+    def apply(self, v_left, v_right):
+        # track speeds (ankle axes point along +y on both sides: the sprocket turns with v / SPROCKET_RADIUS)
+        v = torch.tensor([v_left if left else v_right for _, _, left, _ in self.tracks], device=self.robot.device)
+        if self.wheel_comp:
+            self._wheel_compensation(v)
+        if self.ankles:
+            self._ankles(v / SPROCKET_RADIUS)
+
+    def _wheel_compensation(self, v):
+        # track joint (sprocket) speed and command, in the spin direction of the wheels
+        ratio = WHEEL_RADIUS / SPROCKET_RADIUS
+        joint_vel = self.robot.data.joint_vel.torch
+        w_cmd = v / SPROCKET_RADIUS
+        w = torch.stack([(LEFT_SIGN if left else RIGHT_SIGN) * joint_vel[:, wj].mean(dim=1) * ratio
+                         for _, _, left, wj in self.tracks], 1)
+        ff = torch.sign(w_cmd) * (WHEEL_COMP_FRICTION + WHEEL_COMP_VISCOUS * w_cmd.abs()) * (
+            w_cmd.abs() / WHEEL_COMP_FADE).clamp(max=1.0)
+        self.comp_integral = (self.comp_integral + WHEEL_COMP_KI * (w_cmd - w) * self.dt).clamp(-WHEEL_COMP_I_MAX,
+                                                                                               WHEEL_COMP_I_MAX)
+        tau = ff + self.comp_integral
+        for j, (_, _, left, wj) in enumerate(self.tracks):
+            tau_wheel = (LEFT_SIGN if left else RIGHT_SIGN) * tau[:, j:j + 1] * ratio / len(wj)
+            self.robot.actuators.target_command.set_effort_index(value=tau_wheel.expand(-1, len(wj)), joint_ids=wj)
+
+    def _ankles(self, target):
         z = self.robot.data.body_pos_w.torch[:, :, 2]
         off_ground = torch.stack(
             [z[:, w].min(dim=1).values > WHEEL_RADIUS + CONTACT_MARGIN for _, w, _, _ in self.tracks], 1
         )
         self.air_time = torch.where(off_ground, self.air_time + self.dt, 0.0)
         in_air = self.air_time > AIR_DELAY   # debounce
-        # ankle axes point along +y on both sides: in the air the sprocket (and the frame) turns with the wheels
-        target = torch.tensor([(v_left if left else v_right) / SPROCKET_RADIUS for _, _, left, _ in self.tracks],
-                              device=z.device)
+        target = target.expand_as(self.integral)
         err = target - self.robot.data.joint_vel.torch[:, self.ankle_ids]
-        tau_free = ANKLE_SPEED_GAIN * err + ANKLE_INTEGRAL_GAIN * self.integral
-        grow = (tau_free.abs() < ANKLE_MAX_TORQUE) | (torch.sign(err) != torch.sign(tau_free))   # anti-windup
-        self.integral = torch.where(in_air, self.integral + torch.where(grow, err * self.dt, 0.0), 0.0)
-        tau = (ANKLE_SPEED_GAIN * err + ANKLE_INTEGRAL_GAIN * self.integral).clamp(-ANKLE_MAX_TORQUE, ANKLE_MAX_TORQUE)
+        self.integral = torch.where(
+            in_air, (self.integral + ANKLE_INTEGRAL_GAIN * err * self.dt).clamp(-ANKLE_MAX_TORQUE, ANKLE_MAX_TORQUE), 0.0
+        )
+        if (in_air != self.was_in_air).any():
+            damping = torch.where(in_air, ANKLE_SPEED_GAIN, ANKLE_PASSIVE_DAMPING)
+            self.robot.write_joint_damping_to_sim_index(damping=damping, joint_ids=self.ankle_ids)
+            self.was_in_air = in_air.clone()
+        self.robot.actuators.target_command.set_velocity_index(value=torch.where(in_air, target, 0.0),
+                                                               joint_ids=self.ankle_ids)
         # on the ground: sprocket torque on the track. Wheel axes along -y (left) / +y (right), ankle axes along +y
         effort = self.robot.actuators.applied_effort.torch
-        ratio = SPROCKET_RADIUS / WHEEL_RADIUS
+        ratio = SPROCKET_TORQUE_FACTOR * SPROCKET_RADIUS / WHEEL_RADIUS
         sprocket = torch.stack(
             [(-1.0 if left else 1.0) * ratio * effort[:, wj].sum(dim=1) for _, _, left, wj in self.tracks], 1
         )
-        return torch.where(in_air, tau, sprocket)
+        self.robot.actuators.target_command.set_effort_index(value=torch.where(in_air, self.integral, sprocket),
+                                                             joint_ids=self.ankle_ids)
 
 
 def get_command(t):
@@ -448,7 +486,7 @@ def run(sim_cfg):
 
     left_ids, _ = robot.find_joints(f"{WHEEL_JOINTS}LEFT_.*")
     right_ids, _ = robot.find_joints(f"{WHEEL_JOINTS}RIGHT_.*")
-    print(f"[INFO] {args_cli.model} model: {len(left_ids)} left, {len(right_ids)} right driven wheels")
+    print(f"[INFO] {len(left_ids)} left, {len(right_ids)} right driven wheels")
 
     # start directly in the stance and hold legs and ankles there
     pose_target = robot.data.default_joint_pos.torch.clone()
@@ -457,7 +495,9 @@ def run(sim_cfg):
     robot.actuators.target_command.set_position_index(value=pose_target)
 
     leg_ids, _ = robot.find_joints([".*HFE", "body_.*_ankle"])
-    ankle_ctrl = AnkleController(robot, sim.get_physics_dt()) if args_cli.ankle_stiffness <= 0.0 else None
+    track_ctrl = TrackController(robot, sim.get_physics_dt(),
+                                 ankles=args_cli.ankle_stiffness <= 0.0 and not args_cli.rigid_legs,
+                                 wheel_comp=not args_cli.no_wheel_comp)
 
     if args_cli.rigid_legs:
         print("[INFO] Rigid legs: stiff HFE and ankle drives")
@@ -479,10 +519,8 @@ def run(sim_cfg):
         wheel_vel = twist_to_wheel_velocities(robot, left_ids, right_ids, lin_vel, ang_vel)
         robot.actuators.target_command.set_position_index(value=pose_target)
         robot.actuators.target_command.set_velocity_index(value=wheel_vel)
-        if ankle_ctrl is not None:
-            width = TRACK_WIDTH * TRACK_WIDTH_FACTOR
-            tau = ankle_ctrl.efforts(lin_vel - ang_vel * width / 2.0, lin_vel + ang_vel * width / 2.0)
-            robot.actuators.target_command.set_effort_index(value=tau, joint_ids=ankle_ctrl.ankle_ids)
+        width = TRACK_WIDTH * TRACK_WIDTH_FACTOR
+        track_ctrl.apply(lin_vel - ang_vel * width / 2.0, lin_vel + ang_vel * width / 2.0)
         robot.write_data_to_sim()
 
         sim.step()

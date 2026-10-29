@@ -9,21 +9,18 @@ in Isaac Sim / Isaac Lab (Isaac Lab actuators still override the joints they con
   velocity control of the ankle when the track is in the air: the frame turns with the drive sprocket
 - driven wheels: velocity drive (stiffness 0), armature --wheel_armature. The motor of a track is described at the
   track: --track_max_torque and --track_damping (velocity gain), both referred to the 15 mm wheel radius, are split
-  over the driven wheels of the track (4 in the roller model, 1 in the cylinder model)
+  over the 4 wheels of the track
+- internal friction of the tracks (belt, sprocket, gear): Coulomb --track_friction and viscous --track_viscous at the
+  track joint (45 mm sprocket), as joint friction of the driven wheels (PhysX static / dynamic friction effort and
+  viscous coefficient), referred to the 15 mm wheels and split over them
+- HFE zero: --hfe_offset c = geometric leg angle - encoder angle of the real robot [rad] (alpha = sigma q_HFE; identified
+  on the Qualisys runs of 2026-10-23, isaac_sim/real_id). The joint frame on the leg (localRot1) is turned by -sigma c
+  about the joint axis, so that the simulated joint angle is the robot's encoder angle: the same references and
+  stances as on the robot. Idempotent (the applied offset is stored in traquad:hfeOffset)
 - contact offset --contact_offset on the colliders of wheels, rollers and track bodies (rest offset 0)
-- roller model (track_model:=rollers):
-  - rollers: passive, damping --roller_damping, dry (Coulomb) friction --roller_friction [Nm]
-- sphere model (track_model:=spheres, detected from the passive spheres '*_roller_ball'): all 4 driven spheres of a
-  track are driven as the wheels of the roller model; the passive spheres get the roller settings (damping
-  --roller_damping, dry friction --roller_friction)
-- gimbal model (track_model:=gimbal, passive joints '*_roller_gimbal_joint'): as the sphere model; the controller
-  must reset the passive joint angles (isaac_sim/gimbal_reset.py)
-- cylinder model (track_model:=cylinder, detected from the mimic joints):
-  - wheel 2 of each track is driven; wheels 1, 3, 4 follow it through the mimic joints written by the importer
-    (NewtonMimicAPI, read by PhysX too): no drive, and a finite (huge) limit on leader and followers, which PhysX
-    requires for mimic joints
+- rollers: passive, damping --roller_damping, dry (Coulomb) friction --roller_friction [Nm]
 
-usage: ./isaac.sh finalize_usd.py --usd assets/traquad/traquad.usda [--roller_damping 1e-4] [--roller_friction 0.06]
+usage: ./isaac.sh finalize_usd.py --usd assets/traquad/traquad.usda [--roller_damping 1e-4] [--roller_friction 0.10]
 """
 import argparse
 import math
@@ -31,31 +28,38 @@ import math
 parser = argparse.ArgumentParser()
 parser.add_argument('--usd', required=True)
 parser.add_argument('--roller_damping', type=float, default=1e-4)
-parser.add_argument('--roller_friction', type=float, default=0.06)
+# roller dry friction identified on the Qualisys runs of 2026-10-23 together with mu 0.45 (isaac_sim/real_id)
+parser.add_argument('--roller_friction', type=float, default=0.10)
 # hips and tracks use the same actuator (same K_t): moteus max_current_A 80 / 40 A, gear 9 / 15, so the track motor
 # gives 40 x 15 / (80 x 9) = 0.83 times the hip torque at the sprocket. Velocity gain of the real robot (moteus Kd 0.9 N m s/rad at the sprocket, Kp 0): about
 # 8 times lower than the 2 Nm s/rad used before, it leaves the tracks behind their target under load (the simulated
 # rotation in place drops from about 95% to 60% of the command)
 parser.add_argument('--hip_max_torque', type=float, default=10.0, help='torque limit of a hip motor [Nm]')
 parser.add_argument('--track_max_torque', type=float, default=None,
-                    help='torque limit of a track [Nm at r 15 mm] (default: 0.83 x hip limit at the 28 mm sprocket, '
-                         '4.46 Nm = 298 N of belt force with 10 Nm)')
-parser.add_argument('--track_damping', type=float, default=0.9 * (0.015 / 0.028) ** 2,
-                    help='velocity gain of a track [Nm s/rad]: real Kd 0.9 at the 28 mm sprocket referred to the 15 mm wheels')
+                    help='torque limit of a track [Nm at r 15 mm] (default: 0.83 x hip limit at the 45 mm sprocket, '
+                         '2.78 Nm = 185 N of belt force with 10 Nm)')
+parser.add_argument('--track_damping', type=float, default=0.9 * (0.015 / 0.045) ** 2,
+                    help='velocity gain of a track [Nm s/rad]: real Kd 0.9 at the 45 mm sprocket referred to the 15 mm wheels')
+# measured on the straight runs of 2026-10-23 (torque of the track drives vs speed, Qualisys): 1.16 + 0.013 |w| N m
+parser.add_argument('--track_friction', type=float, default=1.16, help='Coulomb friction of a track [N m at the sprocket]')
+parser.add_argument('--track_viscous', type=float, default=0.013,
+                    help='viscous friction of a track [N m s/rad at the sprocket]')
 parser.add_argument('--wheel_armature', type=float, default=0.001, help='armature of each driven wheel [kg m^2]')
+parser.add_argument('--hfe_offset', type=float, default=-0.05,
+                    help='geometric leg angle - encoder angle [rad] (alpha = sigma q_HFE)')
 parser.add_argument('--contact_offset', type=float, default=0.003, help='wheels, rollers and track bodies [m]')
+SPROCKET_RADIUS = 0.045   # m of belt per rad of the track joint (wheel_rad of the robot, Qualisys 2026-10-22)
 args, _ = parser.parse_known_args()
 if args.track_max_torque is None:
-    args.track_max_torque = args.hip_max_torque * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.028
+    args.track_max_torque = args.hip_max_torque * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / SPROCKET_RADIUS
 
 from isaacsim import SimulationApp  # noqa: E402
 
 app = SimulationApp({'headless': True})
 
-from pxr import PhysxSchema, Sdf, Usd, UsdPhysics  # noqa: E402
+from pxr import Gf, PhysxSchema, Sdf, Usd, UsdPhysics  # noqa: E402
 
 DEG = math.pi / 180.0   # USD angular drive gains are per degree
-MIMIC_LIMIT = 1e7       # [deg], ~28000 turns: PhysX mimic joints need finite limits on leader and followers
 
 
 def drive(prim, kp, kd, fmax):
@@ -68,39 +72,36 @@ def drive(prim, kp, kd, fmax):
     d.CreateTargetVelocityAttr().Set(0.0)
 
 
-def set_limits(prim, limit):
-    j = UsdPhysics.RevoluteJoint(prim)
-    j.CreateLowerLimitAttr().Set(-limit)
-    j.CreateUpperLimitAttr().Set(limit)
-
-
 stage = Usd.Stage.Open(args.usd)
 root = stage.GetDefaultPrim()
 root.GetVariantSets().GetVariantSet('Physics').SetVariantSelection('physx')
 stage.Load()
 
-# mimic joints written by the importer from the URDF <mimic> tags (cylinder model)
-mimic_of = {}
-for prim in stage.Traverse():
-    rel = prim.GetRelationship('newton:mimicJoint')
-    if rel and rel.GetTargets():
-        mimic_of[prim.GetPath()] = rel.GetTargets()[0]
-leaders = set(mimic_of.values())
-model = 'cylinder' if mimic_of else 'rollers'
-if any(p.GetName().endswith('_roller_ball_joint') for p in stage.Traverse()):
-    model = 'spheres'
-if any(p.GetName().endswith('_roller_gimbal_joint') for p in stage.Traverse()):
-    model = 'gimbal'
-driven_per_track = 1 if model == 'cylinder' else 4
+driven_per_track = 4
 wheel_max = args.track_max_torque / driven_per_track
 wheel_kd = args.track_damping / driven_per_track
+wheel_friction = args.track_friction * (0.015 / SPROCKET_RADIUS) / driven_per_track
+wheel_viscous = args.track_viscous * (0.015 / SPROCKET_RADIUS) ** 2 / driven_per_track
+
+
+def joint_friction(prim, coulomb, viscous=None):
+    prim.ApplyAPI('PhysxJointAxisAPI', 'angular')
+    values = {'staticFrictionEffort': coulomb, 'dynamicFrictionEffort': coulomb}
+    if viscous is not None:
+        values['viscousFrictionCoefficient'] = viscous * DEG   # per degree, as the drive gains
+    for attr, v in values.items():
+        a = prim.GetAttribute(f'physxJointAxis:angular:{attr}')
+        if not a:
+            a = prim.CreateAttribute(f'physxJointAxis:angular:{attr}', Sdf.ValueTypeNames.Float)
+        a.Set(v)
 
 
 def drive_wheel(prim):
     drive(prim, 0.0, wheel_kd, wheel_max)
     PhysxSchema.PhysxJointAPI.Apply(prim).CreateArmatureAttr().Set(args.wheel_armature)
+    joint_friction(prim, wheel_friction, wheel_viscous)
 
-counts = {'hfe': 0, 'wheel': 0, 'wheel_follower': 0, 'ankle': 0, 'roller': 0, 'articulation': 0, 'contact_offset': 0}
+counts = {'hfe': 0, 'wheel': 0, 'ankle': 0, 'roller': 0, 'articulation': 0, 'contact_offset': 0}
 for prim in stage.Traverse():
     name = prim.GetName()
     path = prim.GetPath()
@@ -117,15 +118,20 @@ for prim in stage.Traverse():
         continue
     if name.endswith('_HFE'):
         drive(prim, 60.0, 0.6, args.hip_max_torque); counts['hfe'] += 1
-    elif path in mimic_of:
-        # follower wheel: moved by the mimic constraint only
-        prim.RemoveAPI(UsdPhysics.DriveAPI, 'angular')
-        set_limits(prim, MIMIC_LIMIT)
-        counts['wheel_follower'] += 1
-    elif path in leaders:
-        drive_wheel(prim)
-        set_limits(prim, MIMIC_LIMIT)
-        counts['wheel'] += 1
+        # zero of the joint: alpha_geometric = alpha_encoder + c, q_geometric = q + sigma c, i.e. R(q) R(sigma c) between
+        # the joint frames: localRot1 <- localRot1 R_axis(-sigma c) (only the difference to the offset already applied)
+        sigma = 1.0 if name[:2] in ('LF', 'RH') else -1.0
+        applied = prim.GetAttribute('traquad:hfeOffset')
+        old = applied.Get() if applied and applied.Get() is not None else 0.0
+        delta = args.hfe_offset - old
+        if abs(delta) > 1e-12:
+            j = UsdPhysics.Joint(prim)
+            axis = {'X': Gf.Vec3d(1, 0, 0), 'Y': Gf.Vec3d(0, 1, 0), 'Z': Gf.Vec3d(0, 0, 1)}[
+                UsdPhysics.RevoluteJoint(prim).GetAxisAttr().Get()]
+            r1 = Gf.Rotation(Gf.Quatd(j.GetLocalRot1Attr().Get()))
+            r1 = Gf.Rotation(axis, math.degrees(-sigma * delta)) * r1   # GfRotation: left operand applied first
+            j.GetLocalRot1Attr().Set(Gf.Quatf(r1.GetQuat()))
+        prim.CreateAttribute('traquad:hfeOffset', Sdf.ValueTypeNames.Double, custom=True).Set(args.hfe_offset)
     elif name.startswith('joint_wheel_'):
         drive_wheel(prim); counts['wheel'] += 1
     elif name.endswith('_ankle'):
@@ -133,28 +139,10 @@ for prim in stage.Traverse():
     elif '_roller_' in name:
         drive(prim, 0.0, args.roller_damping, 1000.0)
         # dry friction: the roller turns only when the torque on it exceeds this value
-        prim.ApplyAPI('PhysxJointAxisAPI', 'angular')
-        for attr in ('staticFrictionEffort', 'dynamicFrictionEffort'):
-            a = prim.GetAttribute(f'physxJointAxis:angular:{attr}')
-            if not a:
-                a = prim.CreateAttribute(f'physxJointAxis:angular:{attr}', Sdf.ValueTypeNames.Float)
-            a.Set(args.roller_friction)
+        joint_friction(prim, args.roller_friction)
         counts['roller'] += 1
 stage.GetRootLayer().Save()
 
-# mesh colliders (barrel rollers) live in the instance prototypes of payloads/instances.usda, which the traversal above
-# does not reach: contact offset as the other wheel colliders, convex hull limited to 64 vertices (PhysX GPU limit)
-import os  # noqa: E402
-inst_path = os.path.join(os.path.dirname(os.path.abspath(args.usd)), 'payloads', 'instances.usda')
-if os.path.exists(inst_path):
-    inst = Usd.Stage.Open(inst_path)
-    for prim in inst.Traverse():
-        if prim.HasAPI(UsdPhysics.MeshCollisionAPI) and 'barrel_roller' in prim.GetName():
-            col = PhysxSchema.PhysxCollisionAPI.Apply(prim)
-            col.CreateContactOffsetAttr().Set(args.contact_offset)
-            col.CreateRestOffsetAttr().Set(0.0)
-            PhysxSchema.PhysxConvexHullCollisionAPI.Apply(prim).CreateHullVertexLimitAttr().Set(64)
-            counts['contact_offset'] += 1
-    inst.GetRootLayer().Save()
-print('finalized', model, counts, f'wheel kd {wheel_kd:g} max {wheel_max:g} Nm', flush=True)
+print('finalized', counts, f'wheel kd {wheel_kd:g} max {wheel_max:g} Nm friction {wheel_friction:g} Nm + '
+      f'{wheel_viscous:g} Nm s/rad', flush=True)
 app.close()

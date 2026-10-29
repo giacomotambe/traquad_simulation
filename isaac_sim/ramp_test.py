@@ -14,8 +14,8 @@ import math
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--usd', required=True)
-parser.add_argument('--roller_friction', type=float, default=0.06, help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.06 = asset value)')
-parser.add_argument('--mu', type=float, default=0.6,
+parser.add_argument('--roller_friction', type=float, default=0.10, help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.10 = asset value)')
+parser.add_argument('--mu', type=float, default=0.45,
                     help='friction of ground and robot, same material on both (default 0.6: static friction measured for the tracks on the lab rubber mat)')
 parser.add_argument('--roller_damping', type=float, default=1e-4)
 parser.add_argument('--mass', type=float, default=8.0, help='total robot mass [kg]')
@@ -94,7 +94,7 @@ rollers = [i for n, i in idx.items() if '_roller_' in n]
 kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e3, np.float32)
 kp[hfe] = 60.0; kd[hfe] = 0.6; fmax[hfe] = 10.0
 kd[ankles] = 0.01   # passive ankles (asset value): parked, the tracks touch the ground
-kd[wheels] = 0.9 * (0.015 / 0.028) ** 2 / 4; fmax[wheels] = 10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.028 / 4   # track limit 0.83 x hip 10 N m at the sprocket; parked: real track velocity gain (Kd 0.9 at the 28 mm sprocket)
+kd[wheels] = 0.9 * (0.015 / 0.045) ** 2 / 4; fmax[wheels] = 10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.045 / 4   # track limit 0.83 x hip 10 N m at the sprocket; parked: real track velocity gain (Kd 0.9 at the 45 mm sprocket)
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
 robot.set_dof_max_efforts(fmax[None])

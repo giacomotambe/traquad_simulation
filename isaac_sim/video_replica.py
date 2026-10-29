@@ -1,14 +1,12 @@
 """Render a video of the open_traquad.py setup in Isaac Sim with a follow camera.
 
 Frames are saved as PNG named by simulated time, with the command and the measured body velocities
-written on them. Works with both track models: with the cylinder model only the driven wheels (wheel 2, not
-the mimic followers) are commanded. Track motor as in open_traquad.py: 0.83 x the 10 Nm hip limit at the sprocket and the real velocity gain (Kd 0.9 at the 28 mm sprocket) per track, split over
+written on them. Track motor as in open_traquad.py: 0.83 x the 10 Nm hip limit at the sprocket and the real velocity gain (Kd 0.9 at the 45 mm sprocket) per track, split over
 its driven wheels. --csv logs command and measured velocities of every frame.
 usage: ./isaac.sh video_replica.py --usd <robot.usda> --out <frames_dir> [--roller_damping 1e-4] [--csv log.csv]
 """
 import argparse
 from ankle_control import PASSIVE_DAMPING, SPROCKET_RADIUS, AnkleController
-from gimbal_reset import GimbalReset
 import math
 import os
 
@@ -16,11 +14,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--usd', required=True)
 parser.add_argument('--out', required=True)
 parser.add_argument('--roller_damping', type=float, default=1e-4)
-parser.add_argument('--roller_friction', type=float, default=0.06, help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.06 = asset value)')
+parser.add_argument('--roller_friction', type=float, default=0.10, help='dry (Coulomb) friction torque of the roller joints [Nm], always applied (0 = none; 0.10 = asset value)')
 parser.add_argument('--track_width', type=float, default=0.4)
-parser.add_argument('--track_max_torque', type=float, default=10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.028,
+parser.add_argument('--track_max_torque', type=float, default=10.0 * (40.0 * 15.0) / (80.0 * 9.0) * 0.015 / 0.045,
                     help='torque limit of a track motor [N m at r 15 mm] (0.83 x the 10 N m hip limit at the sprocket)')
-parser.add_argument('--mu', type=float, default=0.6,
+parser.add_argument('--mu', type=float, default=0.45,
                     help='friction of ground and robot, same material on both (default 0.6: static friction measured for the tracks on the lab rubber mat)')
 parser.add_argument('--slope', type=float, default=None,
                     help='climb instead of the command sequence: gravity tilts to this slope [deg] (the robot faces uphill), '
@@ -140,9 +138,8 @@ kp = np.zeros(N, np.float32); kd = np.zeros(N, np.float32); fmax = np.full(N, 1e
 kp[hfe] = 60.0; kd[hfe] = 0.6; fmax[hfe] = 10.0
 kd[ankles] = PASSIVE_DAMPING   # passive ankle; velocity control when the track is in the air (ankle_control)
 per_track = len(left) / 2                          # driven wheels per track: 4 (rollers) or 1 (cylinder)
-kd[left + right] = 0.9 * (0.015 / 0.028) ** 2 / per_track; fmax[left + right] = args.track_max_torque / per_track
-gimbal = GimbalReset(robot)   # gimbal model only
-ankle_ctrl = AnkleController(robot, wheel_kd=0.9 * (0.015 / 0.028) ** 2 / per_track, wheel_max=args.track_max_torque / per_track,
+kd[left + right] = 0.9 * (0.015 / 0.045) ** 2 / per_track; fmax[left + right] = args.track_max_torque / per_track
+ankle_ctrl = AnkleController(robot, wheel_kd=0.9 * (0.015 / 0.045) ** 2 / per_track, wheel_max=args.track_max_torque / per_track,
                              followers=FOLLOWERS)
 kd[rollers] = args.roller_damping
 robot.set_dof_gains(stiffnesses=kp[None], dampings=kd[None])
@@ -185,10 +182,7 @@ except OSError:
 t0 = SimulationManager.get_simulation_time()
 n_saved = 0
 log = []
-MODEL = ((f'gimbal spheres, track motor max {args.track_max_torque:g} Nm' if any(n.endswith('_roller_gimbal_joint') for n in idx)
-          else f'sphere pairs, track motor max {args.track_max_torque:g} Nm' if any(n.endswith('_roller_ball_joint') for n in idx)
-         else f'rollers, track motor max {args.track_max_torque:g} Nm') if rollers else 'cylinder wheels (mimic)') + \
-    f', mu {args.mu:g}'
+MODEL = f'rollers, track motor max {args.track_max_torque:g} Nm, mu {args.mu:g}'
 # the command passes through the first-order 2 Hz low-pass of the real omni_controller (velocity_lpf), updated once per
 # rendered frame
 LPF_WC = 2 * math.pi * 2.0
